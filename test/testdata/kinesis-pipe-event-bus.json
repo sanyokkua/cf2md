@@ -1,0 +1,245 @@
+{
+    "Resources": {
+        "GenericEventBus": {
+            "Type": "AWS::Events::EventBus",
+            "Properties": {
+                "Name": "generic-event-bus"
+            },
+            "Metadata": {
+                "aws:cdk:path": "generic-infrastructure/generic-event-bus/Resource"
+            }
+        },
+        "GenericLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+                "RetentionInDays": 3
+            },
+            "UpdateReplacePolicy": "Retain",
+            "DeletionPolicy": "Retain",
+            "Metadata": {
+                "aws:cdk:path": "generic-infrastructure/generic-log-group/Resource"
+            }
+        },
+        "GenericLambdaRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Statement": [
+                        {
+                            "Action": "sts:AssumeRole",
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": "lambda.amazonaws.com"
+                            }
+                        }
+                    ],
+                    "Version": "2012-10-17"
+                },
+                "RoleName": "generic-lambda-role"
+            },
+            "Metadata": {
+                "aws:cdk:path": "generic-infrastructure/generic-lambda-role/Resource"
+            }
+        },
+        "GenericLambdaPolicy": {
+            "Type": "AWS::IAM::Policy",
+            "Properties": {
+                "PolicyDocument": {
+                    "Statement": [
+                        {
+                            "Action": [
+                                "kms:Decrypt",
+                                "kms:Encrypt",
+                                "logs:CreateLogGroup",
+                                "logs:CreateLogStream",
+                                "logs:PutLogEvents"
+                            ],
+                            "Effect": "Allow",
+                            "Resource": "*"
+                        },
+                        {
+                            "Action": "events:PutEvents",
+                            "Effect": "Allow",
+                            "Resource": {
+                                "Fn::GetAtt": ["GenericEventBus", "Arn"]
+                            }
+                        },
+                        {
+                            "Action": [
+                                "kinesis:DescribeStream",
+                                "kinesis:DescribeStreamSummary",
+                                "kinesis:GetRecords",
+                                "kinesis:GetShardIterator",
+                                "kinesis:ListShards",
+                                "kinesis:ListStreams",
+                                "kinesis:SubscribeToShard"
+                            ],
+                            "Effect": "Allow",
+                            "Resource": "arn:aws:kinesis:us-east-1:123456789012:stream/generic-stream"
+                        }
+                    ],
+                    "Version": "2012-10-17"
+                },
+                "PolicyName": "generic-lambda-policy",
+                "Roles": [
+                    {
+                        "Ref": "GenericLambdaRole"
+                    }
+                ]
+            },
+            "Metadata": {
+                "aws:cdk:path": "generic-infrastructure/generic-lambda-role/DefaultPolicy/Resource"
+            }
+        },
+        "GenericLambdaFunction": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+                "Architectures": ["arm64"],
+                "Code": {
+                    "S3Bucket": "generic-bucket-123456789012-us-east-1",
+                    "S3Key": "generic-code.zip"
+                },
+                "FunctionName": "generic-lambda-function",
+                "Handler": "index.handler",
+                "LoggingConfig": {
+                    "LogGroup": {
+                        "Ref": "GenericLogGroup"
+                    }
+                },
+                "MemorySize": 256,
+                "Role": {
+                    "Fn::GetAtt": ["GenericLambdaRole", "Arn"]
+                },
+                "Runtime": "nodejs20.x",
+                "Timeout": 300
+            },
+            "DependsOn": ["GenericLambdaPolicy", "GenericLambdaRole"],
+            "Metadata": {
+                "aws:cdk:path": "generic-infrastructure/generic-lambda/Resource",
+                "aws:asset:path": "asset.generic-code",
+                "aws:asset:is-bundled": true,
+                "aws:asset:property": "Code"
+            }
+        },
+        "GenericPipeRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Statement": [
+                        {
+                            "Action": "sts:AssumeRole",
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": "pipes.amazonaws.com"
+                            }
+                        }
+                    ],
+                    "Version": "2012-10-17"
+                },
+                "Policies": [
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": "events:PutEvents",
+                                    "Effect": "Allow",
+                                    "Resource": {
+                                        "Fn::GetAtt": ["GenericEventBus", "Arn"]
+                                    }
+                                },
+                                {
+                                    "Action": "lambda:InvokeFunction",
+                                    "Effect": "Allow",
+                                    "Resource": {
+                                        "Fn::GetAtt": ["GenericLambdaFunction", "Arn"]
+                                    }
+                                }
+                            ],
+                            "Version": "2012-10-17"
+                        },
+                        "PolicyName": "PipePermissions"
+                    }
+                ]
+            },
+            "Metadata": {
+                "aws:cdk:path": "generic-infrastructure/generic-pipe-role/Resource"
+            }
+        },
+        "GenericPipePolicy": {
+            "Type": "AWS::IAM::Policy",
+            "Properties": {
+                "PolicyDocument": {
+                    "Statement": [
+                        {
+                            "Action": [
+                                "kinesis:DescribeStream",
+                                "kinesis:DescribeStreamConsumer",
+                                "kinesis:DescribeStreamSummary",
+                                "kinesis:GetRecords",
+                                "kinesis:GetShardIterator",
+                                "kinesis:ListShards",
+                                "kinesis:ListStreams",
+                                "kinesis:SubscribeToShard"
+                            ],
+                            "Effect": "Allow",
+                            "Resource": "arn:aws:kinesis:us-east-1:123456789012:stream/generic-stream"
+                        }
+                    ],
+                    "Version": "2012-10-17"
+                },
+                "PolicyName": "generic-pipe-policy",
+                "Roles": [
+                    {
+                        "Ref": "GenericPipeRole"
+                    }
+                ]
+            },
+            "Metadata": {
+                "aws:cdk:path": "generic-infrastructure/generic-pipe-role/DefaultPolicy/Resource"
+            }
+        },
+        "GenericPipe": {
+            "Type": "AWS::Pipes::Pipe",
+            "Properties": {
+                "Enrichment": {
+                    "Fn::GetAtt": ["GenericLambdaFunction", "Arn"]
+                },
+                "EnrichmentParameters": {
+                    "InputTemplate": "{\n  \"data\": <$.data>,\n  \"kinesisSchemaVersion\": <$.kinesisSchemaVersion>,\n  \"partitionKey\": <$.partitionKey>,\n  \"sequenceNumber\": <$.sequenceNumber>,\n  \"eventSource\": <$.eventSource>,\n  \"eventID\": <$.eventID>,\n  \"eventSourceARN\": <$.eventSourceARN>,\n  \"eventName\": <$.eventName>,\n  \"invokeIdentityArn\": <$.invokeIdentityArn>\n}"
+                },
+                "Name": "generic-pipe",
+                "RoleArn": {
+                    "Fn::GetAtt": ["GenericPipeRole", "Arn"]
+                },
+                "Source": "arn:aws:kinesis:us-east-1:123456789012:stream/generic-stream",
+                "SourceParameters": {
+                    "KinesisStreamParameters": {
+                        "BatchSize": 10,
+                        "MaximumBatchingWindowInSeconds": 60,
+                        "MaximumRetryAttempts": 10,
+                        "ParallelizationFactor": 1,
+                        "StartingPosition": "TRIM_HORIZON"
+                    }
+                },
+                "Target": {
+                    "Fn::GetAtt": ["GenericEventBus", "Arn"]
+                },
+                "TargetParameters": {
+                    "InputTemplate": "{\n  \"metadata\": {\n  \"version\": \"1.0\",\n  \"correlationId\": <$.correlationId>,\n  \"eventDateTime\": <aws.pipes.event.ingestion-time>,\n  \"publisher\": \"event-processed\",\n  \"dataCheckSum\": <$.dataCheckSum>\n  },\n\"data\": <$.eventDetail.data>,\n\"partitionKey\": <$.eventDetail.partitionKey>,\n\"sequenceNumber\": <$.eventDetail.sequenceNumber>,\n\"eventSource\": <$.eventDetail.eventSource>,\n\"eventID\": <$.eventDetail.eventID>,\n\"eventSourceARN\": <$.eventDetail.eventSourceARN>,\n\"eventName\": <$.eventDetail.eventName>,\n\"invokeIdentityArn\": <$.eventDetail.invokeIdentityArn>\n}"
+                }
+            },
+            "Metadata": {
+                "aws:cdk:path": "generic-infrastructure/generic-pipe"
+            }
+        },
+        "CDKMetadata": {
+            "Type": "AWS::CDK::Metadata",
+            "Properties": {
+                "Analytics": "v2:deflate64:H4sIAAAAAAAA/z2PwY7CMAxEv4WfdfdlhVD5gCqkpnKbJlWdgFCUf1+lwJ7eeKyRxyVudp+ffdfdgeeffew+grgr/ZhSnv3joBqxFj7Qxle+HJGdaPPD5VAqPGS6sa61rqBY8LDsFqz86CbBslQl7wKwNki1XQA/lKCb2iuL/a/8DEE0l2TjxRgiV19qpj2y0dXo8lyPewl49bWeJmh+tVL8zFHKznkbB+8g/cSThBIwEAAA=="
+            },
+            "Metadata": {
+                "aws:cdk:path": "generic-infrastructure/CDKMetadata/Default"
+            }
+        }
+    }
+}

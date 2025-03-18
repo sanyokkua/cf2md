@@ -1,0 +1,193 @@
+{
+    "Resources": {
+        "AnonymizedTable1": {
+            "Type": "AWS::DynamoDB::Table",
+            "Properties": {
+                "KeySchema": [
+                    {
+                        "AttributeName": "user_id",
+                        "KeyType": "HASH"
+                    }
+                ],
+                "AttributeDefinitions": [
+                    {
+                        "AttributeName": "user_id",
+                        "AttributeType": "S"
+                    },
+                    {
+                        "AttributeName": "appln_name",
+                        "AttributeType": "S"
+                    },
+                    {
+                        "AttributeName": "updated_time",
+                        "AttributeType": "N"
+                    }
+                ],
+                "BillingMode": "PAY_PER_REQUEST",
+                "GlobalSecondaryIndexes": [
+                    {
+                        "IndexName": "Index_AppName",
+                        "KeySchema": [
+                            {
+                                "AttributeName": "appln_name",
+                                "KeyType": "HASH"
+                            },
+                            {
+                                "AttributeName": "updated_time",
+                                "KeyType": "RANGE"
+                            }
+                        ],
+                        "Projection": {
+                            "ProjectionType": "ALL"
+                        }
+                    }
+                ],
+                "PointInTimeRecoverySpecification": {
+                    "PointInTimeRecoveryEnabled": true
+                },
+                "SSESpecification": {
+                    "KMSMasterKeyId": {
+                        "Fn::ImportValue": "example-encryption-key"
+                    },
+                    "SSEEnabled": true,
+                    "SSEType": "KMS"
+                },
+                "TableName": "Example-Metadata-Table",
+                "Tags": [
+                    {
+                        "Key": "TagKey1",
+                        "Value": "PlaceholderValue1"
+                    },
+                    {
+                        "Key": "TagKey2",
+                        "Value": "PlaceholderValue2"
+                    },
+                    {
+                        "Key": "GenericAppTag",
+                        "Value": "GenericDatabaseApp"
+                    },
+                    {
+                        "Key": "TagKey3",
+                        "Value": "PlaceholderValue3"
+                    },
+                    {
+                        "Key": "TagKey4",
+                        "Value": "PlaceholderValue4"
+                    },
+                    {
+                        "Key": "PatternTag",
+                        "Value": "GenericPattern"
+                    }
+                ]
+            },
+            "UpdateReplacePolicy": "Retain",
+            "DeletionPolicy": "Retain",
+            "Metadata": {
+                "aws:cdk:path": "Example/AnonymizedTable1/Resource"
+            }
+        },
+        "CDKMetadata": {
+            "Type": "AWS::CDK::Metadata",
+            "Properties": {
+                "Analytics": "anonymized-data"
+            },
+            "Metadata": {
+                "aws:cdk:path": "Example/CDKMetadata/Default"
+            }
+        },
+        "AnonymizedTable2": {
+            "Type": "AWS::DynamoDB::Table",
+            "Properties": {
+                "KeySchema": [
+                    {
+                        "AttributeName": "pk",
+                        "KeyType": "HASH"
+                    }
+                ],
+                "AttributeDefinitions": [
+                    {
+                        "AttributeName": "pk",
+                        "AttributeType": "S"
+                    }
+                ],
+                "BillingMode": "PAY_PER_REQUEST",
+                "PointInTimeRecoverySpecification": {
+                    "PointInTimeRecoveryEnabled": true
+                },
+                "SSESpecification": {
+                    "KMSMasterKeyId": {
+                        "Fn::ImportValue": "example-encryption-key"
+                    },
+                    "SSEEnabled": true,
+                    "SSEType": "KMS"
+                },
+                "TableName": "Example-Print-Stack",
+                "Tags": [
+                    {
+                        "Key": "TagKey1",
+                        "Value": "PlaceholderValue1"
+                    },
+                    {
+                        "Key": "TagKey2",
+                        "Value": "PlaceholderValue2"
+                    },
+                    {
+                        "Key": "GenericAppTag",
+                        "Value": "GenericDatabaseApp"
+                    },
+                    {
+                        "Key": "TagKey3",
+                        "Value": "PlaceholderValue3"
+                    },
+                    {
+                        "Key": "TagKey4",
+                        "Value": "PlaceholderValue4"
+                    },
+                    {
+                        "Key": "PatternTag",
+                        "Value": "GenericPattern"
+                    }
+                ]
+            },
+            "UpdateReplacePolicy": "Retain",
+            "DeletionPolicy": "Retain",
+            "Metadata": {
+                "aws:cdk:path": "Example/AnonymizedTable2/Resource"
+            }
+        }
+    },
+    "Outputs": {
+        "AnonymizedOutput1": {
+            "Value": {
+                "Fn::GetAtt": ["AnonymizedTable1", "Arn"]
+            },
+            "Export": {
+                "Name": "Anonymized-Metadata-Table-Arn"
+            }
+        },
+        "AnonymizedOutput2": {
+            "Value": {
+                "Fn::GetAtt": ["AnonymizedTable2", "Arn"]
+            },
+            "Export": {
+                "Name": "Anonymized-Print-Stack-Arn"
+            }
+        }
+    },
+    "Rules": {
+        "CheckBootstrapVersion": {
+            "Assertions": [
+                {
+                    "Assert": {
+                        "Fn::Not": [
+                            {
+                                "Fn::Contains": [["1", "2", "3", "4", "5"], "5"]
+                            }
+                        ]
+                    },
+                    "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI."
+                }
+            ]
+        }
+    }
+}

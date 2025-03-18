@@ -1,0 +1,1905 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "Demo API Service",
+    "Parameters": {
+        "EcrAccountId": {
+            "Type": "String",
+            "Description": "Account to use when pulling container images",
+            "MinLength": 1
+        },
+        "DemoDynAgent": {
+            "Type": "String"
+        },
+        "DemoDynAgentVersion": {
+            "Type": "String"
+        },
+        "DemoDynBucket": {
+            "Type": "String",
+            "Default": "demo-dyn-agents-bucket"
+        },
+        "DemoDynTier": {
+            "Type": "String"
+        },
+        "DemoDynAgentAdditionalArguments": {
+            "Type": "String",
+            "Default": ""
+        },
+        "DemoSSLCertificateArn": {
+            "Type": "String",
+            "MinLength": 1
+        },
+        "BaseStackName": {
+            "Type": "String",
+            "MinLength": 1
+        },
+        "SharedSecurityGroupStackName": {
+            "Type": "String",
+            "MinLength": 1
+        },
+        "SharedIamRoleStackName": {
+            "Type": "String",
+            "MinLength": 1
+        },
+        "DemoApiPort": {
+            "Type": "String",
+            "MinLength": 4,
+            "Default": 8080
+        },
+        "Timezone": {
+            "Type": "String",
+            "Default": "UTC"
+        },
+        "ApisVpcCidrIp": {
+            "Type": "String",
+            "MinLength": 1
+        },
+        "EnterpriseServicesVpcCidrIp": {
+            "Type": "String",
+            "MinLength": 1
+        },
+        "DockerRepoName": {
+            "Type": "String",
+            "MinLength": 1
+        },
+        "DesiredCapacity": {
+            "Type": "Number",
+            "Default": "2",
+            "Description": "Number of instances to launch in your ECS cluster."
+        },
+        "MinimumHealthyPercent": {
+            "Type": "Number",
+            "Default": 0
+        },
+        "MaxSize": {
+            "Type": "Number",
+            "Default": "3",
+            "Description": "Maximum number of instances that can be launched in your ECS cluster."
+        },
+        "MinSize": {
+            "Type": "Number",
+            "Default": "2",
+            "Description": "Minimum number of instances that can be launched in your ECS cluster."
+        },
+        "DeregistrationDelay": {
+            "Type": "String",
+            "Default": "45"
+        },
+        "MajorVersion": {
+            "Type": "String",
+            "MinLength": 1,
+            "Default": "v2"
+        },
+        "ScheduleTag": {
+            "Type": "String",
+            "AllowedValues": ["12x5", "24x7"]
+        },
+        "ServiceName": {
+            "Type": "String",
+            "MinLength": 1,
+            "Default": "demo-api"
+        },
+        "EnvironmentTag": {
+            "Type": "String",
+            "MinLength": 1,
+            "AllowedPattern": "^[a-zA-Z0-9]*$"
+        },
+        "EnvTagCompliance": {
+            "Type": "String",
+            "MinLength": 1,
+            "AllowedPattern": "^[a-zA-Z0-9]*$"
+        },
+        "MaxMemoryJVM": {
+            "Type": "String",
+            "Default": "1024m",
+            "Description": "Maximum memory allocation for the JVM"
+        },
+        "InitialMemoryJVM": {
+            "Type": "String",
+            "Default": "1024m",
+            "Description": "Initial memory allocation for the JVM."
+        },
+        "DemoServiceCustomTemplate": {
+            "Type": "String"
+        },
+        "DemoServiceTemplate": {
+            "Type": "String"
+        },
+        "LogbackConfiguration": {
+            "Type": "String",
+            "Description": "Logback configuration filename to be used",
+            "Default": "logback-demo.xml"
+        },
+        "Env": {
+            "Type": "String",
+            "Default": "demo"
+        },
+        "Version": {
+            "Type": "String",
+            "Default": "v2"
+        }
+    },
+    "Metadata": {
+        "Tags": {
+            "Tags": [
+                {
+                    "Key": "Schedule",
+                    "Value": {
+                        "Ref": "ScheduleTag"
+                    }
+                },
+                {
+                    "Key": "Environment",
+                    "Value": {
+                        "Ref": "EnvTagCompliance"
+                    }
+                },
+                {
+                    "Key": "ProductName",
+                    "Value": {
+                        "Fn::FindInMap": ["AnonCommonTags", "AnonPortal", "ProductName"]
+                    }
+                },
+                {
+                    "Key": "CostCentre",
+                    "Value": "DEM"
+                }
+            ]
+        }
+    },
+    "Mappings": {
+        "AWSRegionToAMI": {
+            "eu-west-1": {
+                "AMIID": "ami-abcdef12"
+            }
+        },
+        "AnonDyn": {
+            "Controller": {
+                "dev": "anon-dev.anon-dyn.com",
+                "uat": "anon-uat.anon-dyn.com",
+                "sit": "anon-sit.anon-dyn.com",
+                "ft": "anon-ft.anon-dyn.com",
+                "preprod": "anon-preprod.anon-dyn.com",
+                "prod": "anon-prod.anon-dyn.com"
+            },
+            "AccountName": {
+                "dev": "anon-dev",
+                "uat": "anon-uat",
+                "sit": "anon-sit",
+                "ft": "anon-ft",
+                "preprod": "anon-preprod",
+                "prod": "anon-prod"
+            },
+            "ApplicationName": {
+                "dev": "",
+                "uat": "",
+                "sit": "AnonApp SIT",
+                "ft": "AnonApp FT",
+                "preprod": "AnonApp-PRE",
+                "prod": "AnonApp"
+            }
+        },
+        "EndpointMap": {
+            "common": {
+                "AnonService1PathPrefix": "/anon-service1/v1",
+                "AnonService2PathPrefix": "/anon-service2/v1",
+                "AnonService3PathPrefix": "/anon-service3/v1",
+                "AnonService4PathPrefix": "/anon-service4/v1",
+                "AnonService5PathPrefix": "/anon-service5/v2",
+                "AnonService6PathPrefix": "/anon-service6/v1",
+                "AnonService7PathPrefix": "/anon-service7/v1",
+                "AnonService8PathPrefix": "/anon-service8/v1",
+                "AnonService9PathPrefix": "/anon-service9/v2",
+                "AnonService10PathPrefix": "/anon-service10",
+                "AnonService11PathPrefix": "/",
+                "AnonService12PathPrefix": "/anon-service12/v1",
+                "AnonService13PathPrefix": "/anon-service13/v1",
+                "AnonService14PathPrefix": "/anon-service14/v1",
+                "AnonService15PathPrefix": "/anon-service15/v1",
+                "AnonService16PathPrefix": "/anon-service16/v1",
+                "AnonService17PathPrefix": "/anon-service17/v1",
+                "AnonService18PathPrefix": "/anon-service18/v1",
+                "AnonService19PathPrefix": "/anon-service19/v1"
+            },
+            "dev": {
+                "LoadBalancer1": "anon-lb1.dev.anon.com",
+                "LoadBalancer2": "anon-lb2.dev.anon.com",
+                "LabelServiceDns": "anon-label.dev.anon.com",
+                "AnonWorldDns": "https://api.anonworld.io",
+                "TokenServiceEndpoint": "https://anon-token-dev.anon.net",
+                "ClientLogoServiceEndpoint": "https://www.anonsite.io"
+            },
+            "sit": {
+                "LoadBalancer1": "anon-lb1.sit.anon.com",
+                "LoadBalancer2": "anon-lb2.sit.anon.com",
+                "LabelServiceDns": "anon-label.sit.anon.com",
+                "AnonWorldDns": "https://api.anonworld.io",
+                "TokenServiceEndpoint": "https://anon-token-sit.anon.net",
+                "ClientLogoServiceEndpoint": "https://www.anonsite.io"
+            },
+            "preprod": {
+                "LoadBalancer1": "anon-lb1.preprod.anon.com",
+                "LoadBalancer2": "anon-lb2.preprod.anon.com",
+                "LabelServiceDns": "anon-label.preprod.anon.com",
+                "AnonWorldDns": "https://api.anonworld.io",
+                "TokenServiceEndpoint": "https://anon-token-preprod.anon.net",
+                "ClientLogoServiceEndpoint": "https://www.anonsite.io"
+            },
+            "prod": {
+                "LoadBalancer1": "anon-lb1.prod.anon.com",
+                "LoadBalancer2": "anon-lb2.prod.anon.com",
+                "LabelServiceDns": "anon-label.prod.anon.com",
+                "AnonWorldDns": "https://api.anonworld.io",
+                "TokenServiceEndpoint": "https://anon-token-prod.anon.net",
+                "ClientLogoServiceEndpoint": "https://www.anonsite.io"
+            }
+        },
+        "TargetGroup": {
+            "HealthCheckTimeoutSeconds": {
+                "dev": 15,
+                "uat": 15,
+                "sit": 10,
+                "ft": 10,
+                "pre": 10,
+                "preprod": 10,
+                "prod": 10
+            },
+            "UnhealthyThresholdCount": {
+                "dev": 3,
+                "uat": 3,
+                "sit": 2,
+                "ft": 2,
+                "pre": 2,
+                "preprod": 2,
+                "prod": 2
+            }
+        },
+        "Task": {
+            "Memory": {
+                "dev": 1024,
+                "uat": 1024,
+                "sit": 1024,
+                "ft": 1024,
+                "pre": 1024,
+                "preprod": 1024,
+                "prod": 1024
+            },
+            "Cpu": {
+                "dev": 256,
+                "uat": 256,
+                "sit": 512,
+                "ft": 512,
+                "pre": 512,
+                "preprod": 512,
+                "prod": 512
+            }
+        },
+        "Service": {
+            "HealthCheckGracePeriodSeconds": {
+                "dev": 360,
+                "uat": 360,
+                "sit": 240,
+                "ft": 240,
+                "pre": 240,
+                "preprod": 240,
+                "prod": 240
+            }
+        },
+        "AutoScalingTarget": {
+            "MinContainers": {
+                "dev": 1,
+                "uat": 1,
+                "sit": 1,
+                "ft": 1,
+                "pre": 1,
+                "preprod": 1,
+                "prod": 1
+            },
+            "MaxContainers": {
+                "dev": 1,
+                "uat": 1,
+                "ft": 1,
+                "sit": 2,
+                "pre": 3,
+                "preprod": 3,
+                "prod": 3
+            }
+        },
+        "AutoScalingPolicy": {
+            "AutoScalingMetricTarget": {
+                "dev": "ECSServiceAverageCPUUtilization",
+                "uat": "ECSServiceAverageCPUUtilization",
+                "sit": "ECSServiceAverageCPUUtilization",
+                "ft": "ECSServiceAverageCPUUtilization",
+                "pre": "ECSServiceAverageCPUUtilization",
+                "preprod": "ECSServiceAverageCPUUtilization",
+                "prod": "ECSServiceAverageCPUUtilization"
+            },
+            "TargetValue": {
+                "dev": 75,
+                "uat": 75,
+                "sit": 75,
+                "ft": 75,
+                "pre": 75,
+                "preprod": 75,
+                "prod": 75
+            }
+        },
+        "AnonCommonTags": {
+            "AnonBatch": {
+                "ProductName": "anon-batch"
+            },
+            "AnonMaintenance": {
+                "ProductName": "anon-maintenance"
+            },
+            "AnonPortal": {
+                "ProductName": "anon-portal"
+            },
+            "AnonUser": {
+                "ProductName": "anon-courier"
+            },
+            "AnonESign": {
+                "ProductName": "anon-electronic-signature"
+            },
+            "AnonField": {
+                "ProductName": "anon-field"
+            },
+            "AnonGeo": {
+                "ProductName": "anon-geolocation"
+            },
+            "AnonLabel": {
+                "ProductName": "anon-label"
+            },
+            "AnonManifest": {
+                "ProductName": "anon-manifest"
+            },
+            "AnonRate": {
+                "ProductName": "anon-rate-negotiations"
+            },
+            "AnonRouting": {
+                "ProductName": "anon-routing"
+            },
+            "AnonSequence": {
+                "ProductName": "anon-sequence-generator"
+            },
+            "AnonTooling": {
+                "ProductName": "anon-tooling"
+            },
+            "AnonWorkforce": {
+                "ProductName": "anon-workforce"
+            }
+        },
+        "BusinessServiceTags": {
+            "AnonOps": {
+                "Tag": "AnonOps"
+            },
+            "AnonUser": {
+                "Tag": "AnonUser"
+            },
+            "AnonRouting": {
+                "Tag": "AnonRouting"
+            },
+            "AnonClient": {
+                "Tag": "AnonClient"
+            },
+            "AnonTooling": {
+                "Tag": "AnonTooling"
+            }
+        },
+        "ProductDomainTags": {
+            "Svc1": {
+                "Name": "Anon API Service",
+                "Owner": "anon-support@anon.com"
+            },
+            "Svc2": {
+                "Name": "Anon Field Service",
+                "Owner": "anon-support@anon.com"
+            },
+            "Svc3": {
+                "Name": "Anon Courier Service",
+                "Owner": "anon-support@anon.com"
+            },
+            "Svc4": {
+                "Name": "Anon Service Portal",
+                "Owner": "anon-support@anon.com"
+            },
+            "Svc5": {
+                "Name": "Anon Client Maintenance",
+                "Owner": "anon-support@anon.com"
+            },
+            "Svc6": {
+                "Name": "Anon Core Routing",
+                "Owner": "anon-support@anon.com"
+            },
+            "Svc7": {
+                "Name": "Anon Tooling",
+                "Owner": "anon-support@anon.com"
+            }
+        },
+        "AppCodeMapping": {
+            "AccountIds": {
+                "111111111111": "anon-srv",
+                "222222222222": "anon-srv",
+                "333333333333": "anon-apis",
+                "444444444444": "anon-apis",
+                "555555555555": "anon-cms",
+                "666666666666": "anon-cms",
+                "123456789012": "anon-ss"
+            }
+        }
+    },
+    "Resources": {
+        "ServiceRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": ["ec2.amazonaws.com", "ecs.amazonaws.com", "ecs-tasks.amazonaws.com"],
+                                "AWS": [
+                                    {
+                                        "Fn::Sub": "arn:aws:iam::${AWS::AccountId}:root"
+                                    }
+                                ]
+                            },
+                            "Action": ["sts:AssumeRole"]
+                        }
+                    ]
+                },
+                "Path": "/",
+                "ManagedPolicyArns": ["arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"],
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Join": [
+                                "-",
+                                [
+                                    "demo",
+                                    {
+                                        "Fn::FindInMap": [
+                                            "AppCodeMapping",
+                                            "AccountIds",
+                                            {
+                                                "Ref": "AWS::AccountId"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "Ref": "EnvironmentTag"
+                                    },
+                                    {
+                                        "Ref": "ServiceName"
+                                    },
+                                    {
+                                        "Ref": "MajorVersion"
+                                    }
+                                ]
+                            ]
+                        }
+                    },
+                    {
+                        "Key": "Schedule",
+                        "Value": {
+                            "Ref": "ScheduleTag"
+                        }
+                    },
+                    {
+                        "Key": "Environment",
+                        "Value": {
+                            "Ref": "EnvTagCompliance"
+                        }
+                    }
+                ]
+            }
+        },
+        "S3ReadPolicy": {
+            "Type": "AWS::IAM::Policy",
+            "Properties": {
+                "PolicyName": "ReadBucket",
+                "PolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Action": ["s3:HeadObject", "s3:GetObject"],
+                            "Resource": {
+                                "Fn::Sub": "arn:aws:s3:::${DemoDynBucket}/*"
+                            }
+                        }
+                    ]
+                },
+                "Roles": [
+                    {
+                        "Ref": "ServiceRole"
+                    }
+                ]
+            }
+        },
+        "SsmReadPolicy": {
+            "Type": "AWS::IAM::Policy",
+            "Properties": {
+                "PolicyName": "ReadParameters",
+                "PolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Action": ["ssm:GetParameters", "ssm:GetParameter"],
+                            "Resource": {
+                                "Fn::Sub": "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/AnonPortal-${EnvironmentTag}/*"
+                            }
+                        }
+                    ]
+                },
+                "Roles": [
+                    {
+                        "Ref": "ServiceRole"
+                    }
+                ]
+            }
+        },
+        "EcsCluster": {
+            "Type": "AWS::ECS::Cluster",
+            "Properties": {
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Join": [
+                                "-",
+                                [
+                                    "demo",
+                                    {
+                                        "Fn::FindInMap": [
+                                            "AppCodeMapping",
+                                            "AccountIds",
+                                            {
+                                                "Ref": "AWS::AccountId"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "Ref": "EnvironmentTag"
+                                    },
+                                    {
+                                        "Ref": "ServiceName"
+                                    },
+                                    {
+                                        "Ref": "MajorVersion"
+                                    }
+                                ]
+                            ]
+                        }
+                    },
+                    {
+                        "Key": "Schedule",
+                        "Value": {
+                            "Ref": "ScheduleTag"
+                        }
+                    },
+                    {
+                        "Key": "Environment",
+                        "Value": {
+                            "Ref": "EnvTagCompliance"
+                        }
+                    }
+                ]
+            }
+        },
+        "CloudwatchLogsGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+                "LogGroupName": {
+                    "Ref": "AWS::StackName"
+                },
+                "RetentionInDays": 14
+            }
+        },
+        "SgEcsCluster": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Allow ingress to Demo ECS and egress to services",
+                "VpcId": {
+                    "Fn::Sub": "${BaseStackName}::VpcId"
+                },
+                "SecurityGroupIngress": [
+                    {
+                        "IpProtocol": "TCP",
+                        "FromPort": {
+                            "Ref": "DemoApiPort"
+                        },
+                        "ToPort": {
+                            "Ref": "DemoApiPort"
+                        },
+                        "CidrIp": {
+                            "Ref": "ApisVpcCidrIp"
+                        }
+                    }
+                ],
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Join": [
+                                "-",
+                                [
+                                    "demo",
+                                    {
+                                        "Fn::FindInMap": [
+                                            "AppCodeMapping",
+                                            "AccountIds",
+                                            {
+                                                "Ref": "AWS::AccountId"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "Ref": "EnvironmentTag"
+                                    },
+                                    {
+                                        "Ref": "ServiceName"
+                                    },
+                                    {
+                                        "Ref": "MajorVersion"
+                                    }
+                                ]
+                            ]
+                        }
+                    },
+                    {
+                        "Key": "Schedule",
+                        "Value": {
+                            "Ref": "ScheduleTag"
+                        }
+                    },
+                    {
+                        "Key": "Environment",
+                        "Value": {
+                            "Ref": "EnvTagCompliance"
+                        }
+                    }
+                ]
+            }
+        },
+        "SgEcsClusterDockerPull": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Allow unlimited egress on HTTP(S) ports to pull images",
+                "VpcId": {
+                    "Fn::Sub": "${BaseStackName}::VpcId"
+                },
+                "SecurityGroupEgress": [
+                    {
+                        "IpProtocol": "TCP",
+                        "FromPort": 80,
+                        "ToPort": 80,
+                        "CidrIp": "0.0.0.0/0"
+                    },
+                    {
+                        "IpProtocol": "TCP",
+                        "FromPort": 443,
+                        "ToPort": 443,
+                        "CidrIp": "0.0.0.0/0"
+                    }
+                ],
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Join": [
+                                "-",
+                                [
+                                    "demo",
+                                    {
+                                        "Fn::FindInMap": [
+                                            "AppCodeMapping",
+                                            "AccountIds",
+                                            {
+                                                "Ref": "AWS::AccountId"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "Ref": "EnvironmentTag"
+                                    },
+                                    {
+                                        "Ref": "ServiceName"
+                                    },
+                                    {
+                                        "Ref": "MajorVersion"
+                                    }
+                                ]
+                            ]
+                        }
+                    },
+                    {
+                        "Key": "Schedule",
+                        "Value": {
+                            "Ref": "ScheduleTag"
+                        }
+                    },
+                    {
+                        "Key": "Environment",
+                        "Value": {
+                            "Ref": "EnvTagCompliance"
+                        }
+                    }
+                ]
+            }
+        },
+        "SgEcsExternalLoadBalancer": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Allow egress to Demo API ECS and ingress from Demo Offices and AnonApigee",
+                "VpcId": {
+                    "Fn::Sub": "${BaseStackName}::VpcId"
+                },
+                "SecurityGroupEgress": [
+                    {
+                        "IpProtocol": "TCP",
+                        "FromPort": {
+                            "Ref": "DemoApiPort"
+                        },
+                        "ToPort": {
+                            "Ref": "DemoApiPort"
+                        },
+                        "CidrIp": {
+                            "Ref": "ApisVpcCidrIp"
+                        }
+                    }
+                ],
+                "SecurityGroupIngress": [
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": 80,
+                        "ToPort": 80,
+                        "CidrIp": "192.168.100.10/32",
+                        "Description": "Demo Office - old ISP"
+                    },
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": 443,
+                        "ToPort": 443,
+                        "CidrIp": "192.168.100.10/32",
+                        "Description": "Demo Office - old ISP"
+                    },
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": 80,
+                        "ToPort": 80,
+                        "CidrIp": "192.168.100.20/32",
+                        "Description": "Demo Office - new ISP"
+                    },
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": 443,
+                        "ToPort": 443,
+                        "CidrIp": "192.168.100.20/32",
+                        "Description": "Demo Office - new ISP"
+                    },
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": 443,
+                        "ToPort": 443,
+                        "CidrIp": "203.0.113.10/32",
+                        "Description": "AnonApigee"
+                    },
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": 443,
+                        "ToPort": 443,
+                        "CidrIp": "203.0.113.20/32",
+                        "Description": "AnonApigee"
+                    }
+                ],
+                "Tags": [
+                    {
+                        "Key": "CostCentre",
+                        "Value": "DEM"
+                    },
+                    {
+                        "Key": "BusinessService",
+                        "Value": {
+                            "Fn::FindInMap": ["BusinessServiceTags", "AnonClient", "Tag"]
+                        }
+                    },
+                    {
+                        "Key": "Owner",
+                        "Value": {
+                            "Fn::FindInMap": ["ProductDomainTags", "Svc4", "Owner"]
+                        }
+                    },
+                    {
+                        "Key": "ProductDomain",
+                        "Value": {
+                            "Fn::FindInMap": ["ProductDomainTags", "Svc4", "Name"]
+                        }
+                    }
+                ]
+            }
+        },
+        "EcsTaskDefinition": {
+            "Type": "AWS::ECS::TaskDefinition",
+            "Properties": {
+                "Family": {
+                    "Fn::Join": [
+                        "-",
+                        [
+                            {
+                                "Ref": "AWS::StackName"
+                            },
+                            {
+                                "Ref": "ServiceName"
+                            }
+                        ]
+                    ]
+                },
+                "NetworkMode": "awsvpc",
+                "ExecutionRoleArn": {
+                    "Ref": "ServiceRole"
+                },
+                "TaskRoleArn": {
+                    "Ref": "ServiceRole"
+                },
+                "ContainerDefinitions": [
+                    {
+                        "Name": {
+                            "Fn::Join": [
+                                "-",
+                                [
+                                    {
+                                        "Ref": "AWS::StackName"
+                                    },
+                                    {
+                                        "Ref": "ServiceName"
+                                    }
+                                ]
+                            ]
+                        },
+                        "Essential": "true",
+                        "Image": {
+                            "Fn::Sub": "${EcrAccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${DockerRepoName}:${Version}"
+                        },
+                        "LogConfiguration": {
+                            "LogDriver": "awslogs",
+                            "Options": {
+                                "awslogs-group": {
+                                    "Ref": "CloudwatchLogsGroup"
+                                },
+                                "awslogs-region": {
+                                    "Ref": "AWS::Region"
+                                },
+                                "awslogs-stream-prefix": {
+                                    "Ref": "ServiceName"
+                                }
+                            }
+                        },
+                        "Environment": [
+                            {
+                                "Name": "ANON_SRV1_ENDPOINT",
+                                "Value": {
+                                    "Fn::FindInMap": [
+                                        "EndpointMap",
+                                        {
+                                            "Ref": "EnvironmentTag"
+                                        },
+                                        "LoadBalancer1"
+                                    ]
+                                }
+                            },
+                            {
+                                "Name": "ANON_SRV1_PATH_PREFIX",
+                                "Value": {
+                                    "Fn::FindInMap": ["EndpointMap", "common", "AnonService1PathPrefix"]
+                                }
+                            },
+                            {
+                                "Name": "ANON_SRV2_ENDPOINT",
+                                "Value": {
+                                    "Fn::FindInMap": [
+                                        "EndpointMap",
+                                        {
+                                            "Ref": "EnvironmentTag"
+                                        },
+                                        "LoadBalancer1"
+                                    ]
+                                }
+                            },
+                            {
+                                "Name": "ANON_SRV2_PATH_PREFIX",
+                                "Value": {
+                                    "Fn::FindInMap": ["EndpointMap", "common", "AnonService2PathPrefix"]
+                                }
+                            },
+                            {
+                                "Name": "ANON_SRV3_ENDPOINT",
+                                "Value": {
+                                    "Fn::FindInMap": [
+                                        "EndpointMap",
+                                        {
+                                            "Ref": "EnvironmentTag"
+                                        },
+                                        "LoadBalancer1"
+                                    ]
+                                }
+                            },
+                            {
+                                "Name": "ANON_SRV3_PATH_PREFIX",
+                                "Value": {
+                                    "Fn::FindInMap": ["EndpointMap", "common", "AnonService4PathPrefix"]
+                                }
+                            },
+                            {
+                                "Name": "ANON_SRV4_ENDPOINT",
+                                "Value": {
+                                    "Fn::FindInMap": [
+                                        "EndpointMap",
+                                        {
+                                            "Ref": "EnvironmentTag"
+                                        },
+                                        "LoadBalancer2"
+                                    ]
+                                }
+                            },
+                            {
+                                "Name": "ANON_SRV4_PATH_PREFIX",
+                                "Value": {
+                                    "Fn::FindInMap": ["EndpointMap", "common", "AnonService5PathPrefix"]
+                                }
+                            },
+                            {
+                                "Name": "ANON_SRV5_ENDPOINT",
+                                "Value": {
+                                    "Fn::FindInMap": [
+                                        "EndpointMap",
+                                        {
+                                            "Ref": "EnvironmentTag"
+                                        },
+                                        "LoadBalancer1"
+                                    ]
+                                }
+                            },
+                            {
+                                "Name": "ANON_SRV5_PATH_PREFIX",
+                                "Value": {
+                                    "Fn::FindInMap": ["EndpointMap", "common", "AnonService6PathPrefix"]
+                                }
+                            },
+                            {
+                                "Name": "ANON_SRV6_ENDPOINT",
+                                "Value": {
+                                    "Fn::FindInMap": [
+                                        "EndpointMap",
+                                        {
+                                            "Ref": "EnvironmentTag"
+                                        },
+                                        "LoadBalancer2"
+                                    ]
+                                }
+                            },
+                            {
+                                "Name": "ANON_SRV6_PATH_PREFIX",
+                                "Value": {
+                                    "Fn::FindInMap": ["EndpointMap", "common", "AnonService3PathPrefix"]
+                                }
+                            },
+                            {
+                                "Name": "ANON_SRV7_ENDPOINT",
+                                "Value": {
+                                    "Fn::FindInMap": [
+                                        "EndpointMap",
+                                        {
+                                            "Ref": "EnvironmentTag"
+                                        },
+                                        "LoadBalancer1"
+                                    ]
+                                }
+                            },
+                            {
+                                "Name": "ANON_SRV7_PATH_PREFIX",
+                                "Value": {
+                                    "Fn::FindInMap": ["EndpointMap", "common", "AnonService12PathPrefix"]
+                                }
+                            },
+                            {
+                                "Name": "ANON_SRV8_ENDPOINT",
+                                "Value": {
+                                    "Fn::FindInMap": [
+                                        "EndpointMap",
+                                        {
+                                            "Ref": "EnvironmentTag"
+                                        },
+                                        "LabelServiceDns"
+                                    ]
+                                }
+                            },
+                            {
+                                "Name": "ANON_SRV8_PATH_PREFIX",
+                                "Value": {
+                                    "Fn::FindInMap": ["EndpointMap", "common", "AnonService7PathPrefix"]
+                                }
+                            },
+                            {
+                                "Name": "ANON_SRV9_TEMPLATE",
+                                "Value": {
+                                    "Ref": "DemoServiceTemplate"
+                                }
+                            },
+                            {
+                                "Name": "ANON_SRV10_TEMPLATE",
+                                "Value": {
+                                    "Ref": "DemoServiceCustomTemplate"
+                                }
+                            },
+                            {
+                                "Name": "ANON_SRV11_ENDPOINT",
+                                "Value": {
+                                    "Fn::FindInMap": [
+                                        "EndpointMap",
+                                        {
+                                            "Ref": "EnvironmentTag"
+                                        },
+                                        "AnonWorldDns"
+                                    ]
+                                }
+                            },
+                            {
+                                "Name": "ANON_SRV11_PATH_PREFIX",
+                                "Value": {
+                                    "Fn::FindInMap": ["EndpointMap", "common", "AnonService11PathPrefix"]
+                                }
+                            },
+                            {
+                                "Name": "ANON_SRV12_ENDPOINT",
+                                "Value": {
+                                    "Fn::FindInMap": [
+                                        "EndpointMap",
+                                        {
+                                            "Ref": "EnvironmentTag"
+                                        },
+                                        "TokenServiceEndpoint"
+                                    ]
+                                }
+                            },
+                            {
+                                "Name": "ANON_SRV13_ENDPOINT",
+                                "Value": {
+                                    "Fn::FindInMap": [
+                                        "EndpointMap",
+                                        {
+                                            "Ref": "EnvironmentTag"
+                                        },
+                                        "ClientLogoServiceEndpoint"
+                                    ]
+                                }
+                            },
+                            {
+                                "Name": "ANON_SRV13_PATH_PREFIX",
+                                "Value": {
+                                    "Fn::FindInMap": ["EndpointMap", "common", "AnonService10PathPrefix"]
+                                }
+                            },
+                            {
+                                "Name": "ANON_SRV14_ENDPOINT",
+                                "Value": {
+                                    "Fn::FindInMap": [
+                                        "EndpointMap",
+                                        {
+                                            "Ref": "EnvironmentTag"
+                                        },
+                                        "LoadBalancer1"
+                                    ]
+                                }
+                            },
+                            {
+                                "Name": "ANON_SRV14_PATH_PREFIX",
+                                "Value": {
+                                    "Fn::FindInMap": ["EndpointMap", "common", "AnonService8PathPrefix"]
+                                }
+                            },
+                            {
+                                "Name": "ANON_SRV15_ENDPOINT",
+                                "Value": {
+                                    "Fn::FindInMap": [
+                                        "EndpointMap",
+                                        {
+                                            "Ref": "EnvironmentTag"
+                                        },
+                                        "LoadBalancer1"
+                                    ]
+                                }
+                            },
+                            {
+                                "Name": "ANON_SRV15_PATH_PREFIX",
+                                "Value": {
+                                    "Fn::FindInMap": ["EndpointMap", "common", "AnonService9PathPrefix"]
+                                }
+                            },
+                            {
+                                "Name": "ANON_SRV16_ENDPOINT",
+                                "Value": {
+                                    "Fn::FindInMap": [
+                                        "EndpointMap",
+                                        {
+                                            "Ref": "EnvironmentTag"
+                                        },
+                                        "LoadBalancer1"
+                                    ]
+                                }
+                            },
+                            {
+                                "Name": "ANON_SRV16_PATH_PREFIX",
+                                "Value": {
+                                    "Fn::FindInMap": ["EndpointMap", "common", "AnonService13PathPrefix"]
+                                }
+                            },
+                            {
+                                "Name": "ANON_SRV17_ENDPOINT",
+                                "Value": {
+                                    "Fn::FindInMap": [
+                                        "EndpointMap",
+                                        {
+                                            "Ref": "EnvironmentTag"
+                                        },
+                                        "LoadBalancer1"
+                                    ]
+                                }
+                            },
+                            {
+                                "Name": "ANON_SRV17_PATH_PREFIX",
+                                "Value": {
+                                    "Fn::FindInMap": ["EndpointMap", "common", "AnonService14PathPrefix"]
+                                }
+                            },
+                            {
+                                "Name": "ANON_SRV18_ENDPOINT",
+                                "Value": {
+                                    "Fn::FindInMap": [
+                                        "EndpointMap",
+                                        {
+                                            "Ref": "EnvironmentTag"
+                                        },
+                                        "LoadBalancer2"
+                                    ]
+                                }
+                            },
+                            {
+                                "Name": "ANON_SRV18_PATH_PREFIX",
+                                "Value": {
+                                    "Fn::FindInMap": ["EndpointMap", "common", "AnonService15PathPrefix"]
+                                }
+                            },
+                            {
+                                "Name": "ANON_SRV19_ENDPOINT",
+                                "Value": {
+                                    "Fn::FindInMap": [
+                                        "EndpointMap",
+                                        {
+                                            "Ref": "EnvironmentTag"
+                                        },
+                                        "LoadBalancer2"
+                                    ]
+                                }
+                            },
+                            {
+                                "Name": "ANON_SRV19_PATH_PREFIX",
+                                "Value": {
+                                    "Fn::FindInMap": ["EndpointMap", "common", "AnonService16PathPrefix"]
+                                }
+                            },
+                            {
+                                "Name": "ANON_SRV20_ENDPOINT",
+                                "Value": {
+                                    "Fn::FindInMap": [
+                                        "EndpointMap",
+                                        {
+                                            "Ref": "EnvironmentTag"
+                                        },
+                                        "LoadBalancer2"
+                                    ]
+                                }
+                            },
+                            {
+                                "Name": "ANON_SRV20_PATH_PREFIX",
+                                "Value": {
+                                    "Fn::FindInMap": ["EndpointMap", "common", "AnonService17PathPrefix"]
+                                }
+                            },
+                            {
+                                "Name": "ANON_SRV21_ENDPOINT",
+                                "Value": {
+                                    "Fn::FindInMap": [
+                                        "EndpointMap",
+                                        {
+                                            "Ref": "EnvironmentTag"
+                                        },
+                                        "LoadBalancer1"
+                                    ]
+                                }
+                            },
+                            {
+                                "Name": "ANON_SRV21_PATH_PREFIX",
+                                "Value": {
+                                    "Fn::FindInMap": ["EndpointMap", "common", "AnonService18PathPrefix"]
+                                }
+                            },
+                            {
+                                "Name": "ANON_SRV22_ENDPOINT",
+                                "Value": {
+                                    "Fn::FindInMap": [
+                                        "EndpointMap",
+                                        {
+                                            "Ref": "EnvironmentTag"
+                                        },
+                                        "LoadBalancer1"
+                                    ]
+                                }
+                            },
+                            {
+                                "Name": "ANON_SRV22_PATH_PREFIX",
+                                "Value": {
+                                    "Fn::FindInMap": ["EndpointMap", "common", "AnonService19PathPrefix"]
+                                }
+                            },
+                            {
+                                "Name": "LOGBACK_CONFIGURATION",
+                                "Value": {
+                                    "Ref": "LogbackConfiguration"
+                                }
+                            },
+                            {
+                                "Name": "ENABLE_DEMODYN",
+                                "Value": {
+                                    "Ref": "DemoDynAgent"
+                                }
+                            },
+                            {
+                                "Name": "DEMODYN_CONTROLLER_HOST_NAME",
+                                "Value": {
+                                    "Fn::FindInMap": [
+                                        "AnonDyn",
+                                        "Controller",
+                                        {
+                                            "Ref": "EnvironmentTag"
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "Name": "DEMODYN_CONTROLLER_PORT",
+                                "Value": "443"
+                            },
+                            {
+                                "Name": "DEMODYN_AGENT_ACCOUNT_NAME",
+                                "Value": {
+                                    "Fn::FindInMap": [
+                                        "AnonDyn",
+                                        "AccountName",
+                                        {
+                                            "Ref": "EnvironmentTag"
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "Name": "DEMODYN_AGENT_VERSION",
+                                "Value": {
+                                    "Ref": "DemoDynAgentVersion"
+                                }
+                            },
+                            {
+                                "Name": "DEMODYN_AGENT_BUCKET",
+                                "Value": {
+                                    "Ref": "DemoDynBucket"
+                                }
+                            },
+                            {
+                                "Name": "DEMODYN_AGENT_APPLICATION_NAME",
+                                "Value": {
+                                    "Fn::FindInMap": [
+                                        "AnonDyn",
+                                        "ApplicationName",
+                                        {
+                                            "Ref": "EnvironmentTag"
+                                        }
+                                    ]
+                                }
+                            },
+                            {
+                                "Name": "DEMODYN_AGENT_TIER_NAME",
+                                "Value": {
+                                    "Ref": "DemoDynTier"
+                                }
+                            },
+                            {
+                                "Name": "DEMODYN_CONTROLLER_SSL_ENABLED",
+                                "Value": "true"
+                            },
+                            {
+                                "Name": "ADDITIONAL_DEMODYN_ARGS",
+                                "Value": {
+                                    "Ref": "DemoDynAgentAdditionalArguments"
+                                }
+                            },
+                            {
+                                "Name": "SSM_PARAM_NAMESPACE",
+                                "Value": {
+                                    "Fn::Sub": "AnonPortal-${EnvironmentTag}"
+                                }
+                            },
+                            {
+                                "Name": "TIMEZONE",
+                                "Value": {
+                                    "Ref": "Timezone"
+                                }
+                            },
+                            {
+                                "Name": "SPRING_PROFILES_ACTIVE",
+                                "Value": {
+                                    "Ref": "EnvironmentTag"
+                                }
+                            },
+                            {
+                                "Name": "JVM_MAX_MEMORY_XMX",
+                                "Value": {
+                                    "Ref": "MaxMemoryJVM"
+                                }
+                            },
+                            {
+                                "Name": "JVM_INITIAL_MEMORY_XMS",
+                                "Value": {
+                                    "Ref": "InitialMemoryJVM"
+                                }
+                            }
+                        ],
+                        "PortMappings": [
+                            {
+                                "ContainerPort": {
+                                    "Ref": "DemoApiPort"
+                                },
+                                "HostPort": {
+                                    "Ref": "DemoApiPort"
+                                }
+                            }
+                        ]
+                    }
+                ],
+                "RequiresCompatibilities": ["FARGATE"],
+                "Cpu": {
+                    "Fn::FindInMap": [
+                        "Task",
+                        "Cpu",
+                        {
+                            "Ref": "EnvironmentTag"
+                        }
+                    ]
+                },
+                "Memory": {
+                    "Fn::FindInMap": [
+                        "Task",
+                        "Memory",
+                        {
+                            "Ref": "EnvironmentTag"
+                        }
+                    ]
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Join": [
+                                "-",
+                                [
+                                    "demo",
+                                    {
+                                        "Fn::FindInMap": [
+                                            "AppCodeMapping",
+                                            "AccountIds",
+                                            {
+                                                "Ref": "AWS::AccountId"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "Ref": "EnvironmentTag"
+                                    },
+                                    {
+                                        "Ref": "ServiceName"
+                                    },
+                                    {
+                                        "Ref": "MajorVersion"
+                                    }
+                                ]
+                            ]
+                        }
+                    },
+                    {
+                        "Key": "Schedule",
+                        "Value": {
+                            "Ref": "ScheduleTag"
+                        }
+                    },
+                    {
+                        "Key": "Environment",
+                        "Value": {
+                            "Ref": "EnvTagCompliance"
+                        }
+                    }
+                ]
+            }
+        },
+        "EcsExternalTargetGroup": {
+            "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
+            "DependsOn": "EcsExternalAlb",
+            "Properties": {
+                "HealthCheckIntervalSeconds": 60,
+                "HealthCheckPath": "/actuator/health",
+                "HealthCheckProtocol": "HTTP",
+                "HealthCheckTimeoutSeconds": {
+                    "Fn::FindInMap": [
+                        "TargetGroup",
+                        "HealthCheckTimeoutSeconds",
+                        {
+                            "Ref": "EnvironmentTag"
+                        }
+                    ]
+                },
+                "HealthyThresholdCount": 2,
+                "UnhealthyThresholdCount": {
+                    "Fn::FindInMap": [
+                        "TargetGroup",
+                        "UnhealthyThresholdCount",
+                        {
+                            "Ref": "EnvironmentTag"
+                        }
+                    ]
+                },
+                "Port": {
+                    "Ref": "DemoApiPort"
+                },
+                "Protocol": "HTTP",
+                "VpcId": {
+                    "Fn::Sub": "${BaseStackName}::VpcId"
+                },
+                "TargetGroupAttributes": [
+                    {
+                        "Key": "deregistration_delay.timeout_seconds",
+                        "Value": {
+                            "Ref": "DeregistrationDelay"
+                        }
+                    }
+                ],
+                "TargetType": "ip",
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Join": [
+                                "-",
+                                [
+                                    "demo",
+                                    {
+                                        "Fn::FindInMap": [
+                                            "AppCodeMapping",
+                                            "AccountIds",
+                                            {
+                                                "Ref": "AWS::AccountId"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "Ref": "EnvironmentTag"
+                                    },
+                                    {
+                                        "Ref": "ServiceName"
+                                    },
+                                    {
+                                        "Ref": "MajorVersion"
+                                    }
+                                ]
+                            ]
+                        }
+                    },
+                    {
+                        "Key": "Schedule",
+                        "Value": {
+                            "Ref": "ScheduleTag"
+                        }
+                    },
+                    {
+                        "Key": "Environment",
+                        "Value": {
+                            "Ref": "EnvTagCompliance"
+                        }
+                    }
+                ]
+            }
+        },
+        "EcsExternalAlb": {
+            "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
+            "Properties": {
+                "Scheme": "internet-facing",
+                "LoadBalancerAttributes": [
+                    {
+                        "Key": "idle_timeout.timeout_seconds",
+                        "Value": "60"
+                    }
+                ],
+                "Subnets": [
+                    {
+                        "Fn::Sub": "${BaseStackName}::PublicSubnetAId"
+                    },
+                    {
+                        "Fn::Sub": "${BaseStackName}::PublicSubnetBId"
+                    },
+                    {
+                        "Fn::Sub": "${BaseStackName}::PublicSubnetCId"
+                    }
+                ],
+                "SecurityGroups": [
+                    {
+                        "Ref": "SgEcsExternalLoadBalancer"
+                    },
+                    {
+                        "Fn::Sub": "${SharedSecurityGroupStackName}::HttpIngressFromCiSGId"
+                    },
+                    {
+                        "Fn::Sub": "${SharedSecurityGroupStackName}::HttpIngressFromTrustedLocationsSGId"
+                    }
+                ],
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Join": [
+                                "-",
+                                [
+                                    "demo",
+                                    {
+                                        "Fn::FindInMap": [
+                                            "AppCodeMapping",
+                                            "AccountIds",
+                                            {
+                                                "Ref": "AWS::AccountId"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "Ref": "EnvironmentTag"
+                                    },
+                                    {
+                                        "Ref": "ServiceName"
+                                    },
+                                    {
+                                        "Ref": "MajorVersion"
+                                    }
+                                ]
+                            ]
+                        }
+                    },
+                    {
+                        "Key": "Schedule",
+                        "Value": {
+                            "Ref": "ScheduleTag"
+                        }
+                    }
+                ]
+            }
+        },
+        "EcsExternalAlbListener": {
+            "Type": "AWS::ElasticLoadBalancingV2::Listener",
+            "Properties": {
+                "Certificates": [
+                    {
+                        "CertificateArn": {
+                            "Ref": "DemoSSLCertificateArn"
+                        }
+                    }
+                ],
+                "DefaultActions": [
+                    {
+                        "Type": "forward",
+                        "TargetGroupArn": {
+                            "Ref": "EcsExternalTargetGroup"
+                        }
+                    }
+                ],
+                "LoadBalancerArn": {
+                    "Ref": "EcsExternalAlb"
+                },
+                "Port": 443,
+                "Protocol": "HTTPS"
+            }
+        },
+        "EcsExternalAlbListenerRule": {
+            "Type": "AWS::ElasticLoadBalancingV2::ListenerRule",
+            "DependsOn": "EcsExternalAlbListener",
+            "Properties": {
+                "Actions": [
+                    {
+                        "Type": "forward",
+                        "TargetGroupArn": {
+                            "Ref": "EcsExternalTargetGroup"
+                        }
+                    }
+                ],
+                "Conditions": [
+                    {
+                        "Field": "path-pattern",
+                        "Values": ["/"]
+                    }
+                ],
+                "ListenerArn": {
+                    "Ref": "EcsExternalAlbListener"
+                },
+                "Priority": 1
+            }
+        },
+        "EcsService": {
+            "Type": "AWS::ECS::Service",
+            "DependsOn": ["EcsExternalAlbListener"],
+            "Properties": {
+                "Cluster": {
+                    "Ref": "EcsCluster"
+                },
+                "DesiredCount": {
+                    "Ref": "DesiredCapacity"
+                },
+                "LaunchType": "FARGATE",
+                "LoadBalancers": [
+                    {
+                        "ContainerName": {
+                            "Fn::Join": [
+                                "-",
+                                [
+                                    {
+                                        "Ref": "AWS::StackName"
+                                    },
+                                    {
+                                        "Ref": "ServiceName"
+                                    }
+                                ]
+                            ]
+                        },
+                        "ContainerPort": {
+                            "Ref": "DemoApiPort"
+                        },
+                        "TargetGroupArn": {
+                            "Ref": "EcsExternalTargetGroup"
+                        }
+                    }
+                ],
+                "TaskDefinition": {
+                    "Ref": "EcsTaskDefinition"
+                },
+                "DeploymentConfiguration": {
+                    "MaximumPercent": 100,
+                    "MinimumHealthyPercent": {
+                        "Ref": "MinimumHealthyPercent"
+                    }
+                },
+                "HealthCheckGracePeriodSeconds": {
+                    "Fn::FindInMap": [
+                        "Service",
+                        "HealthCheckGracePeriodSeconds",
+                        {
+                            "Ref": "EnvironmentTag"
+                        }
+                    ]
+                },
+                "NetworkConfiguration": {
+                    "AwsvpcConfiguration": {
+                        "SecurityGroups": [
+                            {
+                                "Ref": "SgEcsCluster"
+                            }
+                        ],
+                        "Subnets": [
+                            {
+                                "Fn::Sub": "${BaseStackName}::PrivateSubnetAId"
+                            },
+                            {
+                                "Fn::Sub": "${BaseStackName}::PrivateSubnetBId"
+                            },
+                            {
+                                "Fn::Sub": "${BaseStackName}::PrivateSubnetCId"
+                            }
+                        ]
+                    }
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": {
+                            "Fn::Join": [
+                                "-",
+                                [
+                                    "demo",
+                                    {
+                                        "Fn::FindInMap": [
+                                            "AppCodeMapping",
+                                            "AccountIds",
+                                            {
+                                                "Ref": "AWS::AccountId"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "Ref": "EnvironmentTag"
+                                    },
+                                    {
+                                        "Ref": "ServiceName"
+                                    },
+                                    {
+                                        "Ref": "MajorVersion"
+                                    }
+                                ]
+                            ]
+                        }
+                    },
+                    {
+                        "Key": "Schedule",
+                        "Value": {
+                            "Ref": "ScheduleTag"
+                        }
+                    }
+                ]
+            }
+        },
+        "ServiceScalingTarget": {
+            "Type": "AWS::ApplicationAutoScaling::ScalableTarget",
+            "DependsOn": "EcsService",
+            "Properties": {
+                "MinCapacity": {
+                    "Fn::FindInMap": [
+                        "AutoScalingTarget",
+                        "MinContainers",
+                        {
+                            "Ref": "EnvironmentTag"
+                        }
+                    ]
+                },
+                "MaxCapacity": {
+                    "Fn::FindInMap": [
+                        "AutoScalingTarget",
+                        "MaxContainers",
+                        {
+                            "Ref": "EnvironmentTag"
+                        }
+                    ]
+                },
+                "ResourceId": {
+                    "Fn::Join": [
+                        "",
+                        [
+                            "service/",
+                            {
+                                "Ref": "EcsCluster"
+                            },
+                            "/",
+                            {
+                                "Fn::GetAtt": ["EcsService", "Name"]
+                            }
+                        ]
+                    ]
+                },
+                "RoleARN": {
+                    "Fn::Sub": "${SharedIamRoleStackName}::ApiAutoscalingRoleArn"
+                },
+                "ScalableDimension": "ecs:service:DesiredCount",
+                "ServiceNamespace": "ecs"
+            }
+        },
+        "ServiceScalingPolicy": {
+            "Type": "AWS::ApplicationAutoScaling::ScalingPolicy",
+            "Properties": {
+                "PolicyName": "AStepPolicy",
+                "PolicyType": "TargetTrackingScaling",
+                "ScalingTargetId": {
+                    "Ref": "ServiceScalingTarget"
+                },
+                "TargetTrackingScalingPolicyConfiguration": {
+                    "PredefinedMetricSpecification": {
+                        "PredefinedMetricType": {
+                            "Fn::FindInMap": [
+                                "AutoScalingPolicy",
+                                "AutoScalingMetricTarget",
+                                {
+                                    "Ref": "EnvironmentTag"
+                                }
+                            ]
+                        }
+                    },
+                    "ScaleInCooldown": 10,
+                    "ScaleOutCooldown": 10,
+                    "TargetValue": {
+                        "Fn::FindInMap": [
+                            "AutoScalingPolicy",
+                            "TargetValue",
+                            {
+                                "Ref": "EnvironmentTag"
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        "ALB500sAlarmScaleUp": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "Properties": {
+                "EvaluationPeriods": "1",
+                "Statistic": "Average",
+                "Threshold": "10",
+                "AlarmDescription": "Alarm if our ALB generates too many HTTP 500s.",
+                "Period": "60",
+                "AlarmActions": [
+                    {
+                        "Ref": "ServiceScalingPolicy"
+                    }
+                ],
+                "Namespace": "AWS/ApplicationELB",
+                "Dimensions": [
+                    {
+                        "Name": "ECSService",
+                        "Value": {
+                            "Ref": "EcsService"
+                        }
+                    }
+                ],
+                "ComparisonOperator": "GreaterThanThreshold",
+                "MetricName": "HTTPCode_ELB_5XX_Count"
+            }
+        }
+    },
+    "Outputs": {
+        "EcsExternalAlb": {
+            "Description": "External DNS URL",
+            "Value": {
+                "Fn::Join": [
+                    "",
+                    [
+                        {
+                            "Fn::GetAtt": ["EcsExternalAlb", "DNSName"]
+                        }
+                    ]
+                ]
+            },
+            "Export": {
+                "Name": {
+                    "Fn::Join": [
+                        "::",
+                        [
+                            {
+                                "Ref": "AWS::StackName"
+                            },
+                            "EcsExternalDns"
+                        ]
+                    ]
+                }
+            }
+        }
+    }
+}

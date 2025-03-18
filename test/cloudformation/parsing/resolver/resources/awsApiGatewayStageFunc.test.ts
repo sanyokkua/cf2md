@@ -1,0 +1,190 @@
+import log from 'loglevel';
+import { awsApiGatewayStageFunc } from '../../../../../src/cloudformation/parsing/resolver/resources/awsApiGatewayStageFunc';
+import { ResolvingContext } from '../../../../../src/cloudformation/parsing/types/types';
+import {
+    generateAlphaNumeric,
+    resolveString,
+    resolveStringWithDefault,
+} from '../../../../../src/cloudformation/parsing/utils/helper-utils';
+import { CloudFormationResource } from '../../../../../src/cloudformation/types/cloudformation-model';
+
+// Mock the helper functions so we can control their outputs.
+jest.mock('../../../../../src/cloudformation/parsing/utils/helper-utils', () => ({
+    generateAlphaNumeric: jest.fn(() => 'MOCKED_ID'),
+    resolveString: jest.fn((_value: unknown, _propertyName: string, _ctx: ResolvingContext) => 'resolvedRestApiId'),
+    resolveStringWithDefault: jest.fn(
+        (_value: unknown, defaultValue: string, _propertyName: string, _ctx: ResolvingContext) => defaultValue,
+    ),
+}));
+
+/**
+ * Creates a mock ResolvingContext for testing.
+ */
+function createMockContext(): ResolvingContext {
+    return {
+        originalTemplate: {},
+        lookupMapPreProcessed: {},
+        generatedIds: new Set(),
+        lookupMapDynamic: {},
+        currentPath: [],
+        addName: jest.fn(),
+        popName: jest.fn(() => ''),
+        getCurrentPath: jest.fn(() => ''),
+        hasParameterName: jest.fn(() => false),
+        getParameter: jest.fn(),
+        addParameter: jest.fn(),
+        addGeneratedId: jest.fn(),
+        isIdExists: jest.fn(() => false),
+        getRegion: jest.fn(() => 'us-east-1'),
+        getPartition: jest.fn(() => 'aws'),
+        getAccountId: jest.fn(() => '123456789012'),
+        getAZs: jest.fn(() => ['us-east-1a', 'us-east-1b']),
+    } as unknown as ResolvingContext;
+}
+
+describe('awsApiGatewayStageFunc', () => {
+    let mockCtx: ResolvingContext;
+    let resource: CloudFormationResource;
+
+    beforeEach(() => {
+        // Create a fresh mock context and resource for every test.
+        mockCtx = createMockContext();
+        resource = {
+            Properties: {
+                RestApiId: 'dummyRestApiId',
+                StageName: 'dummyStageName',
+            },
+        } as CloudFormationResource;
+
+        // Ensure that _id and _arn are not preset.
+        delete resource._id;
+        delete resource._arn;
+
+        // Clear any previous calls on helper mocks.
+        (generateAlphaNumeric as jest.Mock).mockClear();
+        (resolveString as jest.Mock).mockClear();
+        (resolveStringWithDefault as jest.Mock).mockClear();
+    });
+
+    describe('idGenFunc', () => {
+        /**
+         * Tests that a new ID is generated when none exists.
+         */
+        it('should generate a new ID if not already set', () => {
+            const id = awsApiGatewayStageFunc.idGenFunc('AWS::ApiGateway::Stage', 'TestLogicalId', resource, mockCtx);
+
+            // Expect generateAlphaNumeric to be called with a length of 4.
+            expect(generateAlphaNumeric).toHaveBeenCalledWith(4, mockCtx);
+            // The default value is constructed as "stage-MOCKED_ID" since generateAlphaNumeric returns 'MOCKED_ID'.
+            expect(resolveStringWithDefault).toHaveBeenCalledWith(
+                'dummyStageName',
+                'stage-MOCKED_ID',
+                'AWS::ApiGateway::Stage.Properties.StageName',
+                mockCtx,
+            );
+            expect(id).toBe('stage-MOCKED_ID');
+            expect(resource._id).toBe('stage-MOCKED_ID');
+        });
+
+        /**
+         * Tests that the existing ID is returned if it is already set.
+         */
+        it('should return the existing ID if already set', () => {
+            resource._id = 'existingId';
+            const id = awsApiGatewayStageFunc.idGenFunc('AWS::ApiGateway::Stage', 'TestLogicalId', resource, mockCtx);
+
+            expect(id).toBe('existingId');
+            // When an ID already exists, neither helper should be called.
+            expect(generateAlphaNumeric).not.toHaveBeenCalled();
+            expect(resolveStringWithDefault).not.toHaveBeenCalled();
+        });
+
+        /**
+         * Tests the edge case where StageName is empty and the default is used.
+         */
+        it('should generate default ID if StageName is empty', () => {
+            resource.Properties.StageName = '';
+            const id = awsApiGatewayStageFunc.idGenFunc('AWS::ApiGateway::Stage', 'TestLogicalId', resource, mockCtx);
+
+            expect(generateAlphaNumeric).toHaveBeenCalledWith(4, mockCtx);
+            expect(resolveStringWithDefault).toHaveBeenCalledWith(
+                '',
+                'stage-MOCKED_ID',
+                'AWS::ApiGateway::Stage.Properties.StageName',
+                mockCtx,
+            );
+            expect(id).toBe('stage-MOCKED_ID');
+        });
+    });
+
+    describe('refFunc', () => {
+        /**
+         * Tests that refFunc returns the ID from idGenFunc.
+         */
+        it('should return the ID generated by idGenFunc', () => {
+            const id = awsApiGatewayStageFunc.refFunc('AWS::ApiGateway::Stage', 'TestLogicalId', resource, mockCtx);
+            expect(id).toBe('stage-MOCKED_ID');
+        });
+    });
+
+    describe('getAttFunc', () => {
+        /**
+         * Tests that getAttFunc logs a warning and returns the generated ID regardless of the attribute key.
+         */
+        it('should warn and return the ID for any attribute key', () => {
+            const warnSpy = jest.spyOn(log, 'warn').mockImplementation(() => {});
+            const id = awsApiGatewayStageFunc.getAttFunc(
+                'AWS::ApiGateway::Stage',
+                'AnyKey',
+                'TestLogicalId',
+                resource,
+                mockCtx,
+            );
+            expect(id).toBe('stage-MOCKED_ID');
+            expect(warnSpy).toHaveBeenCalledWith(
+                'Passed key AnyKey for AWS::ApiGateway::Stage, with logicalId=TestLogicalId is not supported, id will be returned',
+                resource,
+                mockCtx,
+            );
+            warnSpy.mockRestore();
+        });
+    });
+
+    describe('arnGenFunc', () => {
+        /**
+         * Tests that a new ARN is generated and assigned if none exists.
+         */
+        it('should generate and assign a new ARN if none exists', () => {
+            const arn = awsApiGatewayStageFunc.arnGenFunc('AWS::ApiGateway::Stage', 'TestLogicalId', resource, mockCtx);
+
+            // Verify that resolveString was used to resolve RestApiId.
+            expect(resolveString).toHaveBeenCalledWith(
+                'dummyRestApiId',
+                'AWS::ApiGateway::Stage.Properties.RestApiId',
+                mockCtx,
+            );
+            // Verify that resolveStringWithDefault was used to resolve StageName.
+            expect(resolveStringWithDefault).toHaveBeenCalledWith(
+                'dummyStageName',
+                'AWS::ApiGateway::Stage.Properties.StageName',
+                'TestLogicalId',
+                mockCtx,
+            );
+
+            // Expected ARN format: arn:{partition}:apigateway:{region}::/restapis/{resolvedRestApiId}/stages/{defaultStageName}
+            const expectedArn =
+                'arn:aws:apigateway:us-east-1::/restapis/resolvedRestApiId/stages/AWS::ApiGateway::Stage.Properties.StageName';
+            expect(arn).toBe(expectedArn);
+            expect(resource._arn).toBe(expectedArn);
+        });
+
+        /**
+         * Tests that the existing ARN is returned if it is already set.
+         */
+        it('should return the existing ARN if already set', () => {
+            resource._arn = 'existingArn';
+            const arn = awsApiGatewayStageFunc.arnGenFunc('AWS::ApiGateway::Stage', 'TestLogicalId', resource, mockCtx);
+            expect(arn).toBe('existingArn');
+        });
+    });
+});

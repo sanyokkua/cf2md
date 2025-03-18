@@ -1,0 +1,285 @@
+{
+    "Resources": {
+        "testAppprocessruleAllowEventRuletestAppprocesstestAppprocesslambda": {
+            "Type": "AWS::Lambda::Permission",
+            "Properties": {
+                "Action": "lambda:InvokeFunction",
+                "FunctionName": {
+                    "Fn::GetAtt": ["TestAppLambda", "Arn"]
+                },
+                "Principal": "events.amazonaws.com",
+                "SourceArn": {
+                    "Fn::GetAtt": ["LambdaRule", "Arn"]
+                }
+            },
+            "Metadata": {
+                "aws:cdk:path": "app-resource-process/app-resource-process-rule/AllowEventRuletestAppprocesstestAppprocesslambda1"
+            }
+        },
+        "CDKMetadata": {
+            "Type": "AWS::CDK::Metadata",
+            "Properties": {
+                "Analytics": "v2:deflate64:fuyewghuywegufguywd"
+            },
+            "Metadata": {
+                "aws:cdk:path": "app-resource-process/CDKMetadata/Default"
+            }
+        },
+        "TestAppLambda": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+                "Architectures": ["arm64"],
+                "Code": {
+                    "S3Bucket": "cdk-fesew323r-assets-978628766276-eu-west-1",
+                    "S3Key": "fwerf23fweddf32fr32f.zip"
+                },
+                "DeadLetterConfig": {
+                    "TargetArn": {
+                        "Fn::GetAtt": ["LambdaDlq", "Arn"]
+                    }
+                },
+                "Environment": {
+                    "Variables": {
+                        "ENV": "test",
+                        "EXT_APP_BASE_URL": {
+                            "Ref": "SsmParameterValuetestAppExtServiceBaseUrlUniqueIDParameter"
+                        },
+                        "EXT_APP_ACTIVATE": {
+                            "Ref": "SsmParameterValuetestAppExtServiceActiveFlagUniqueIDParameter"
+                        },
+                        "AMOUNT": {
+                            "Ref": "SsmParameterValuetestAppAmountUniqueIDParameter"
+                        }
+                    }
+                },
+                "FunctionName": "app-resource-process-lambda",
+                "Handler": "index.handler",
+                "LoggingConfig": {
+                    "LogGroup": {
+                        "Ref": "TestAppLambdaLogs"
+                    }
+                },
+                "MemorySize": 256,
+                "Role": {
+                    "Fn::GetAtt": ["TestAppLambdaRole", "Arn"]
+                },
+                "Runtime": "nodejs20.x",
+                "Timeout": 900,
+                "VpcConfig": {
+                    "SecurityGroupIds": [
+                        {
+                            "Fn::GetAtt": ["LambdaSecurityGroup", "GroupId"]
+                        }
+                    ],
+                    "SubnetIds": ["subnet-434235fd", "subnet-d232er34", "subnet-cwed134s"]
+                }
+            },
+            "DependsOn": ["TestAppLambdaRole", "TestAppLambdaPolicies"],
+            "Metadata": {
+                "aws:cdk:path": "app-resource-process/app-resource-process-lambda/Resource",
+                "aws:asset:path": "asset.fwerf23fweddf32fr32f",
+                "aws:asset:is-bundled": true,
+                "aws:asset:property": "Code"
+            }
+        },
+        "TestAppLambdaLogs": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+                "RetentionInDays": 3
+            },
+            "UpdateReplacePolicy": "Retain",
+            "DeletionPolicy": "Retain",
+            "Metadata": {
+                "aws:cdk:path": "app-resource-process/app-resource-process-logs/app-resource-process-logs/Resource"
+            }
+        },
+        "TestAppLambdaRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Statement": [
+                        {
+                            "Action": "sts:AssumeRole",
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": "lambda.amazonaws.com"
+                            }
+                        }
+                    ],
+                    "Version": "2012-10-17"
+                },
+                "RoleName": "app-resource-process-role"
+            },
+            "Metadata": {
+                "aws:cdk:path": "app-resource-process/app-resource-process-role/Resource"
+            }
+        },
+        "TestAppLambdaPolicies": {
+            "Type": "AWS::IAM::Policy",
+            "Properties": {
+                "PolicyDocument": {
+                    "Statement": [
+                        {
+                            "Action": [
+                                "ec2:CreateNetworkInterface",
+                                "ec2:DeleteNetworkInterface",
+                                "ec2:DescribeNetworkInterfaces",
+                                "events:PutEvents",
+                                "kms:Decrypt",
+                                "logs:CreateLogGroup",
+                                "logs:CreateLogStream",
+                                "logs:PutLogEvents",
+                                "ses:SendEmail",
+                                "ses:SendRawEmail",
+                                "ssm:GetParameter"
+                            ],
+                            "Effect": "Allow",
+                            "Resource": "*"
+                        },
+                        {
+                            "Action": "sqs:SendMessage",
+                            "Effect": "Allow",
+                            "Resource": {
+                                "Fn::GetAtt": ["LambdaDlq", "Arn"]
+                            }
+                        }
+                    ],
+                    "Version": "2012-10-17"
+                },
+                "PolicyName": "testAppprocessroleDefaultPolicyB3329E2F",
+                "Roles": [
+                    {
+                        "Ref": "TestAppLambdaRole"
+                    }
+                ]
+            },
+            "Metadata": {
+                "aws:cdk:path": "app-resource-process/app-resource-process-role/DefaultPolicy/Resource"
+            }
+        },
+        "TestAppSqsDlqPolicy": {
+            "Type": "AWS::SQS::QueuePolicy",
+            "Properties": {
+                "PolicyDocument": {
+                    "Statement": [
+                        {
+                            "Action": "sqs:SendMessage",
+                            "Condition": {
+                                "ArnEquals": {
+                                    "aws:SourceArn": {
+                                        "Fn::GetAtt": ["LambdaRule", "Arn"]
+                                    }
+                                }
+                            },
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": "events.amazonaws.com"
+                            },
+                            "Resource": {
+                                "Fn::GetAtt": ["RuleDlq", "Arn"]
+                            },
+                            "Sid": "AllowEventRuletestAppprocesstestAppprocessrule2A1582A5"
+                        }
+                    ],
+                    "Version": "2012-10-17"
+                },
+                "Queues": [
+                    {
+                        "Ref": "RuleDlq"
+                    }
+                ]
+            },
+            "Metadata": {
+                "aws:cdk:path": "app-resource-process/app-resource-process-rule-dlq/Policy/Resource"
+            }
+        },
+        "LambdaSecurityGroup": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Automatic security group for Lambda Function testAppprocesstestAppprocesslambda1",
+                "SecurityGroupEgress": [
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "Description": "Allow all outbound traffic by default",
+                        "IpProtocol": "-1"
+                    }
+                ],
+                "VpcId": "vpc-fwsfwef2"
+            },
+            "Metadata": {
+                "aws:cdk:path": "app-resource-process/app-resource-process-lambda/SecurityGroup/Resource"
+            }
+        },
+        "LambdaDlq": {
+            "Type": "AWS::SQS::Queue",
+            "Properties": {
+                "QueueName": "app-resource-process-lambda-dlq",
+                "MessageRetentionPeriod": 345600
+            },
+            "UpdateReplacePolicy": "Delete",
+            "DeletionPolicy": "Delete",
+            "Metadata": {
+                "aws:cdk:path": "app-resource-process/app-resource-process-lambda-dlq/Resource"
+            }
+        },
+        "LambdaRule": {
+            "Type": "AWS::Events::Rule",
+            "Properties": {
+                "EventBusName": "ApplicationEventBus",
+                "EventPattern": {
+                    "detail": {
+                        "data": {
+                            "notification": {
+                                "source": ["Customer"]
+                            }
+                        }
+                    }
+                },
+                "Name": "app-resource-process-rule",
+                "State": "ENABLED",
+                "Targets": [
+                    {
+                        "Arn": {
+                            "Fn::GetAtt": ["TestAppLambda", "Arn"]
+                        },
+                        "DeadLetterConfig": {
+                            "Arn": {
+                                "Fn::GetAtt": ["RuleDlq", "Arn"]
+                            }
+                        },
+                        "Id": "Target0"
+                    }
+                ]
+            },
+            "Metadata": {
+                "aws:cdk:path": "app-resource-process/app-resource-process-rule/Resource"
+            }
+        },
+        "RuleDlq": {
+            "Type": "AWS::SQS::Queue",
+            "Properties": {
+                "QueueName": "app-resource-process-rule-dlq",
+                "MessageRetentionPeriod": 345600
+            },
+            "UpdateReplacePolicy": "Delete",
+            "DeletionPolicy": "Delete",
+            "Metadata": {
+                "aws:cdk:path": "app-resource-process/app-resource-process-rule-dlq/Resource"
+            }
+        }
+    },
+    "Parameters": {
+        "SsmParameterValuetestAppExtServiceBaseUrlUniqueIDParameter": {
+            "Type": "AWS::SSM::Parameter::Value<String>",
+            "Default": "/test/app/ExtService/BaseUrl"
+        },
+        "SsmParameterValuetestAppExtServiceActiveFlagUniqueIDParameter": {
+            "Type": "AWS::SSM::Parameter::Value<String>",
+            "Default": "/test/app/ExtService/ActiveFlag"
+        },
+        "SsmParameterValuetestAppAmountUniqueIDParameter": {
+            "Type": "AWS::SSM::Parameter::Value<String>",
+            "Default": "/test/app/Amount"
+        }
+    }
+}

@@ -1,0 +1,434 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "CloudFormation template for the following service chain: API Gateway -> SQS -> Lambda -> EventBridge -> EventBridge Rules -> SNS -> (Email/Endpoint)\n",
+    "Resources": {
+        "ApiGatewayRestApi": {
+            "Type": "AWS::ApiGateway::RestApi",
+            "Properties": {
+                "Name": "ApiGatewayForSQS",
+                "Tags": [
+                    {
+                        "Key": "GeneratedBy",
+                        "Value": "LLM"
+                    },
+                    {
+                        "Key": "TemplateType",
+                        "Value": "TestData"
+                    }
+                ]
+            }
+        },
+        "ApiGatewayResource": {
+            "Type": "AWS::ApiGateway::Resource",
+            "Properties": {
+                "ParentId": {
+                    "Fn::GetAtt": ["ApiGatewayRestApi", "RootResourceId"]
+                },
+                "PathPart": "invoke",
+                "RestApiId": {
+                    "Ref": "ApiGatewayRestApi"
+                },
+                "Tags": [
+                    {
+                        "Key": "GeneratedBy",
+                        "Value": "LLM"
+                    },
+                    {
+                        "Key": "TemplateType",
+                        "Value": "TestData"
+                    }
+                ]
+            }
+        },
+        "ApiGatewaySQSRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": "apigateway.amazonaws.com"
+                            },
+                            "Action": "sts:AssumeRole"
+                        }
+                    ]
+                },
+                "Policies": [
+                    {
+                        "PolicyName": "ApiGatewaySQSPolicy",
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Action": "sqs:SendMessage",
+                                    "Resource": {
+                                        "Fn::GetAtt": ["SQSQueue", "Arn"]
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "Tags": [
+                    {
+                        "Key": "GeneratedBy",
+                        "Value": "LLM"
+                    },
+                    {
+                        "Key": "TemplateType",
+                        "Value": "TestData"
+                    }
+                ]
+            }
+        },
+        "ApiGatewayMethod": {
+            "Type": "AWS::ApiGateway::Method",
+            "Properties": {
+                "RestApiId": {
+                    "Ref": "ApiGatewayRestApi"
+                },
+                "ResourceId": {
+                    "Ref": "ApiGatewayResource"
+                },
+                "HttpMethod": "POST",
+                "AuthorizationType": "NONE",
+                "Integration": {
+                    "Type": "AWS",
+                    "IntegrationHttpMethod": "POST",
+                    "Uri": {
+                        "Fn::Sub": "arn:aws:apigateway:${AWS::Region}:sqs:action/SendMessage"
+                    },
+                    "Credentials": {
+                        "Fn::GetAtt": ["ApiGatewaySQSRole", "Arn"]
+                    },
+                    "RequestTemplates": {
+                        "application/json": {
+                            "Fn::Sub": [
+                                "Action=SendMessage&MessageBody=$input.body&QueueUrl=$util.urlEncode('${QueueUrl}')",
+                                {
+                                    "QueueUrl": {
+                                        "Fn::GetAtt": ["SQSQueue", "QueueUrl"]
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "IntegrationResponses": [
+                        {
+                            "StatusCode": 200
+                        }
+                    ]
+                },
+                "MethodResponses": [
+                    {
+                        "StatusCode": 200
+                    }
+                ],
+                "Tags": [
+                    {
+                        "Key": "GeneratedBy",
+                        "Value": "LLM"
+                    },
+                    {
+                        "Key": "TemplateType",
+                        "Value": "TestData"
+                    }
+                ]
+            }
+        },
+        "SQSQueue": {
+            "Type": "AWS::SQS::Queue",
+            "Properties": {
+                "QueueName": "ApiGatewayQueue",
+                "Tags": [
+                    {
+                        "Key": "GeneratedBy",
+                        "Value": "LLM"
+                    },
+                    {
+                        "Key": "TemplateType",
+                        "Value": "TestData"
+                    }
+                ]
+            }
+        },
+        "LambdaExecutionRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": "lambda.amazonaws.com"
+                            },
+                            "Action": "sts:AssumeRole"
+                        }
+                    ]
+                },
+                "Policies": [
+                    {
+                        "PolicyName": "LambdaSQSPolicy",
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Action": ["sqs:ReceiveMessage", "sqs:DeleteMessage", "sqs:GetQueueAttributes"],
+                                    "Resource": {
+                                        "Fn::GetAtt": ["SQSQueue", "Arn"]
+                                    }
+                                },
+                                {
+                                    "Effect": "Allow",
+                                    "Action": "events:PutEvents",
+                                    "Resource": {
+                                        "Fn::GetAtt": ["EventBus", "Arn"]
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "Tags": [
+                    {
+                        "Key": "GeneratedBy",
+                        "Value": "LLM"
+                    },
+                    {
+                        "Key": "TemplateType",
+                        "Value": "TestData"
+                    }
+                ]
+            }
+        },
+        "LambdaFunction": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+                "FunctionName": "SQSToEventBridgeFunction",
+                "Runtime": "python3.8",
+                "Handler": "index.handler",
+                "Role": {
+                    "Fn::GetAtt": ["LambdaExecutionRole", "Arn"]
+                },
+                "Code": {
+                    "ZipFile": "import json\nimport boto3\n\ndef handler(event, context):\n    client = boto3.client('events')\n    # For demonstration, send two events, one for each rule filter.\n    entries = [\n        {\n            'Source': 'custom.lambda',\n            'DetailType': 'LambdaEvent',\n            'Detail': json.dumps({'message': 'Hello from Lambda', 'rule': 'rule1'}),\n            'EventBusName': 'LambdaEventBus'\n        },\n        {\n            'Source': 'custom.lambda',\n            'DetailType': 'LambdaEvent',\n            'Detail': json.dumps({'message': 'Hello from Lambda', 'rule': 'rule2'}),\n            'EventBusName': 'LambdaEventBus'\n        }\n    ]\n    response = client.put_events(Entries=entries)\n    return {\n        'statusCode': 200,\n        'body': json.dumps(response)\n    }\n"
+                },
+                "Tags": [
+                    {
+                        "Key": "GeneratedBy",
+                        "Value": "LLM"
+                    },
+                    {
+                        "Key": "TemplateType",
+                        "Value": "TestData"
+                    }
+                ]
+            }
+        },
+        "LambdaSQSEventSourceMapping": {
+            "Type": "AWS::Lambda::EventSourceMapping",
+            "Properties": {
+                "EventSourceArn": {
+                    "Fn::GetAtt": ["SQSQueue", "Arn"]
+                },
+                "FunctionName": {
+                    "Fn::GetAtt": ["LambdaFunction", "Arn"]
+                },
+                "BatchSize": 1,
+                "Enabled": true
+            }
+        },
+        "EventBus": {
+            "Type": "AWS::Events::EventBus",
+            "Properties": {
+                "Name": "LambdaEventBus",
+                "Tags": [
+                    {
+                        "Key": "GeneratedBy",
+                        "Value": "LLM"
+                    },
+                    {
+                        "Key": "TemplateType",
+                        "Value": "TestData"
+                    }
+                ]
+            }
+        },
+        "EventBridgeSNSRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": "events.amazonaws.com"
+                            },
+                            "Action": "sts:AssumeRole"
+                        }
+                    ]
+                },
+                "Policies": [
+                    {
+                        "PolicyName": "EventBridgeSNSPolicy",
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Action": "sns:Publish",
+                                    "Resource": [
+                                        {
+                                            "Fn::GetAtt": ["SNSTopic1", "Arn"]
+                                        },
+                                        {
+                                            "Fn::GetAtt": ["SNSTopic2", "Arn"]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "Tags": [
+                    {
+                        "Key": "GeneratedBy",
+                        "Value": "LLM"
+                    },
+                    {
+                        "Key": "TemplateType",
+                        "Value": "TestData"
+                    }
+                ]
+            }
+        },
+        "EventRule1": {
+            "Type": "AWS::Events::Rule",
+            "Properties": {
+                "Name": "EventRule1",
+                "EventBusName": {
+                    "Ref": "EventBus"
+                },
+                "EventPattern": {
+                    "detail": {
+                        "rule": ["rule1"]
+                    }
+                },
+                "Targets": [
+                    {
+                        "Id": "SNSTarget1",
+                        "Arn": {
+                            "Fn::GetAtt": ["SNSTopic1", "Arn"]
+                        },
+                        "RoleArn": {
+                            "Fn::GetAtt": ["EventBridgeSNSRole", "Arn"]
+                        }
+                    }
+                ],
+                "Tags": [
+                    {
+                        "Key": "GeneratedBy",
+                        "Value": "LLM"
+                    },
+                    {
+                        "Key": "TemplateType",
+                        "Value": "TestData"
+                    }
+                ]
+            }
+        },
+        "EventRule2": {
+            "Type": "AWS::Events::Rule",
+            "Properties": {
+                "Name": "EventRule2",
+                "EventBusName": {
+                    "Ref": "EventBus"
+                },
+                "EventPattern": {
+                    "detail": {
+                        "rule": ["rule2"]
+                    }
+                },
+                "Targets": [
+                    {
+                        "Id": "SNSTarget2",
+                        "Arn": {
+                            "Fn::GetAtt": ["SNSTopic2", "Arn"]
+                        },
+                        "RoleArn": {
+                            "Fn::GetAtt": ["EventBridgeSNSRole", "Arn"]
+                        }
+                    }
+                ],
+                "Tags": [
+                    {
+                        "Key": "GeneratedBy",
+                        "Value": "LLM"
+                    },
+                    {
+                        "Key": "TemplateType",
+                        "Value": "TestData"
+                    }
+                ]
+            }
+        },
+        "SNSTopic1": {
+            "Type": "AWS::SNS::Topic",
+            "Properties": {
+                "DisplayName": "SNSTopicForRule1",
+                "Tags": [
+                    {
+                        "Key": "GeneratedBy",
+                        "Value": "LLM"
+                    },
+                    {
+                        "Key": "TemplateType",
+                        "Value": "TestData"
+                    }
+                ]
+            }
+        },
+        "SNSTopic2": {
+            "Type": "AWS::SNS::Topic",
+            "Properties": {
+                "DisplayName": "SNSTopicForRule2",
+                "Tags": [
+                    {
+                        "Key": "GeneratedBy",
+                        "Value": "LLM"
+                    },
+                    {
+                        "Key": "TemplateType",
+                        "Value": "TestData"
+                    }
+                ]
+            }
+        },
+        "SNSSubscription1": {
+            "Type": "AWS::SNS::Subscription",
+            "Properties": {
+                "Protocol": "email",
+                "Endpoint": "example1@example.com",
+                "TopicArn": {
+                    "Ref": "SNSTopic1"
+                }
+            }
+        },
+        "SNSSubscription2": {
+            "Type": "AWS::SNS::Subscription",
+            "Properties": {
+                "Protocol": "https",
+                "Endpoint": "https://example.com/endpoint",
+                "TopicArn": {
+                    "Ref": "SNSTopic2"
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,32 @@
+{
+    "compilerOptions": {
+        "target": "ES6",
+        "module": "commonjs",
+        "lib": ["DOM", "ES6"],
+        "declaration": true,
+        "strict": true,
+        "noImplicitAny": true,
+        "strictNullChecks": true,
+        "noImplicitThis": true,
+        "alwaysStrict": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "noImplicitReturns": true,
+        "noFallthroughCasesInSwitch": true,
+        "inlineSourceMap": true,
+        "inlineSources": true,
+        "experimentalDecorators": true,
+        "strictPropertyInitialization": false,
+        "resolveJsonModule": true,
+        "typeRoots": ["./node_modules/@types"],
+        "outDir": "dist",
+        "listFiles": true,
+        "allowSyntheticDefaultImports": true,
+        "plugins": [
+            {
+                "transform": "typia/lib/transform"
+            }
+        ]
+    },
+    "exclude": ["node_modules", "dist"]
+}

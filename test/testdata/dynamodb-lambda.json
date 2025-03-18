@@ -1,0 +1,76 @@
+{
+    "Resources": {
+        "GenericStepFunctionRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Statement": [
+                        {
+                            "Action": "sts:AssumeRole",
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": "events.amazonaws.com"
+                            }
+                        }
+                    ],
+                    "Version": "2012-10-17"
+                },
+                "ManagedPolicyArns": [
+                    "arn:aws:iam::123456789012:policy/generic-policy",
+                    "arn:aws:iam::123456789012:policy/shared-generic-policy"
+                ],
+                "PermissionsBoundary": "arn:aws:iam::123456789012:policy/org-boundary-policy"
+            }
+        },
+        "GenericLambdaFunction": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+                "Architectures": ["arm64"],
+                "Code": {
+                    "S3Bucket": "generic-assets-bucket",
+                    "S3Key": "generic-lambda.zip"
+                },
+                "Environment": {
+                    "Variables": {
+                        "GENERIC_ENV_VAR": "value",
+                        "API_ENDPOINT": "https://api.example.com",
+                        "CLIENT_ID": "generic-client-id",
+                        "CLIENT_SECRET": "generic-secret"
+                    }
+                },
+                "FunctionName": "generic-lambda-function",
+                "Handler": "index.handler",
+                "Role": "arn:aws:iam::123456789012:role/generic-lambda-role",
+                "Runtime": "nodejs18.x",
+                "Timeout": 30,
+                "TracingConfig": { "Mode": "Active" }
+            }
+        },
+        "GenericDynamoDBTable": {
+            "Type": "AWS::DynamoDB::Table",
+            "Properties": {
+                "AttributeDefinitions": [{ "AttributeName": "id", "AttributeType": "S" }],
+                "BillingMode": "PAY_PER_REQUEST",
+                "KeySchema": [{ "AttributeName": "id", "KeyType": "HASH" }],
+                "TableName": "generic-dynamodb-table"
+            }
+        },
+        "GenericApiGateway": {
+            "Type": "AWS::ApiGateway::RestApi",
+            "Properties": {
+                "Name": "generic-api-gateway",
+                "Policy": {
+                    "Statement": [
+                        {
+                            "Action": ["execute-api:Invoke"],
+                            "Effect": "Allow",
+                            "Principal": { "AWS": "*" },
+                            "Resource": "arn:aws:execute-api:us-east-1:123456789012:*"
+                        }
+                    ],
+                    "Version": "2012-10-17"
+                }
+            }
+        }
+    }
+}
