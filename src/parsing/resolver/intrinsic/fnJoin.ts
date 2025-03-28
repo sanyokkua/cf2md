@@ -1,5 +1,5 @@
-import { joinStrings } from 'coreutilsts';
 import log from 'loglevel';
+import { StringUtils } from '../../../common';
 import { CfIntrinsicFunctions } from '../../enums/cf-enums';
 import { FnJoin } from '../../types/cloudformation-model';
 import { Intrinsic } from '../../types/intrinsic-types';
@@ -7,7 +7,10 @@ import { ResolvingContext, ValueResolverFunc } from '../../types/resolving-types
 import { IntrinsicUtils } from '../../types/util-service-types';
 
 export class FnJoinIntrinsic implements Intrinsic {
-    constructor(private readonly intrinsicUtils: IntrinsicUtils) {}
+    constructor(
+        private readonly intrinsicUtils: IntrinsicUtils,
+        private readonly stringUtils: StringUtils,
+    ) {}
 
     resolveValue(object: unknown, ctx: ResolvingContext, resolveValue: ValueResolverFunc): unknown {
         log.trace('fnJoin is called');
@@ -47,7 +50,7 @@ export class FnJoinIntrinsic implements Intrinsic {
         });
 
         // Join the resolved string values using the specified delimiter.
-        const result = joinStrings(stringValues, delimiter);
+        const result = this.stringUtils.joinStrings(stringValues, delimiter);
         log.trace(`fnJoin: Result is "${result}"`);
         return result;
     }

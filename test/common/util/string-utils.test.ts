@@ -220,4 +220,26 @@ describe('string-utils', () => {
             expect(result).toBe('This is not a placeholder: $name or ${name');
         });
     });
+
+    describe('joinStrings', () => {
+        beforeEach(() => {
+            stringUtils = new StringUtilsImpl();
+        });
+
+        it('should join strings', () => {
+            const result = stringUtils.joinStrings(['a', 'b', 'c'], ',');
+            expect(result).toBe('a,b,c');
+        });
+    });
+
+    describe('splitString', () => {
+        beforeEach(() => {
+            stringUtils = new StringUtilsImpl();
+        });
+
+        it('should split string', () => {
+            const result = stringUtils.splitString('a,b,c,d', ',');
+            expect(result).toStrictEqual(['a', 'b', 'c', 'd']);
+        });
+    });
 });

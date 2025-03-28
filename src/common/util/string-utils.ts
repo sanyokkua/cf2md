@@ -1,4 +1,5 @@
-import { isNullOrBlankString } from 'coreutilsts';
+import { isNullOrBlankString, joinStrings, splitString } from 'coreutilsts';
+import { LineSeparator } from 'coreutilsts/dist/src/string/types';
 import log from 'loglevel';
 import { StringUtils } from '../types/util-types';
 
@@ -49,5 +50,13 @@ export class StringUtilsImpl implements StringUtils {
 
         log.trace('Completed replaceTemplateVariables');
         return result;
+    }
+
+    joinStrings(strings: string[], joinSymbol?: LineSeparator): string {
+        return joinStrings(strings, joinSymbol);
+    }
+
+    splitString(value: string, separator?: LineSeparator): string[] {
+        return splitString(value, separator);
     }
 }

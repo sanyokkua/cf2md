@@ -1,3 +1,4 @@
+import { StringUtils } from '../../../src/common';
 import { CfIntrinsicFunctions } from '../../../src/parsing';
 import { IntrinsicResolverImpl } from '../../../src/parsing/resolver/intrinsic-resolver';
 import { IntrinsicResolver, ResourceIntrinsicResolver } from '../../../src/parsing/types/intrinsic-types';
@@ -7,6 +8,7 @@ describe('IntrinsicResolverImpl', () => {
     let resolver: IntrinsicResolver;
     let mockIntrinsicUtils: jest.Mocked<IntrinsicUtils>;
     let mockResourceIntrinsicResolver: jest.Mocked<ResourceIntrinsicResolver>;
+    let mockStringUtils: jest.Mocked<StringUtils>;
 
     beforeEach(() => {
         // Minimal mocks for IntrinsicUtils
@@ -21,7 +23,17 @@ describe('IntrinsicResolverImpl', () => {
             getResourceIntrinsic: jest.fn(),
         } as jest.Mocked<ResourceIntrinsicResolver>;
 
-        resolver = new IntrinsicResolverImpl(mockIntrinsicUtils, mockResourceIntrinsicResolver);
+        mockStringUtils = {
+            isBlankString: jest.fn(),
+            // @ts-ignore
+            isValidNotBlankString: jest.fn(),
+            parseTemplateString: jest.fn(),
+            replaceTemplateVariables: jest.fn(),
+            joinStrings: jest.fn(),
+            splitString: jest.fn(),
+        };
+
+        resolver = new IntrinsicResolverImpl(mockIntrinsicUtils, mockResourceIntrinsicResolver, mockStringUtils);
         jest.clearAllMocks();
     });
 

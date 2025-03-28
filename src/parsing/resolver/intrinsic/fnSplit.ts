@@ -1,5 +1,5 @@
-import { splitString } from 'coreutilsts';
 import log from 'loglevel';
+import { StringUtils } from '../../../common';
 import { CfIntrinsicFunctions } from '../../enums/cf-enums';
 import { FnSplit } from '../../types/cloudformation-model';
 import { Intrinsic } from '../../types/intrinsic-types';
@@ -7,7 +7,10 @@ import { ResolvingContext, ValueResolverFunc } from '../../types/resolving-types
 import { IntrinsicUtils } from '../../types/util-service-types';
 
 export class FnSplitIntrinsic implements Intrinsic {
-    constructor(private readonly intrinsicUtils: IntrinsicUtils) {}
+    constructor(
+        private readonly intrinsicUtils: IntrinsicUtils,
+        private readonly stringUtils: StringUtils,
+    ) {}
 
     resolveValue(object: unknown, ctx: ResolvingContext, resolveValue: ValueResolverFunc): unknown {
         log.trace('fnSplit is called');
@@ -29,7 +32,7 @@ export class FnSplitIntrinsic implements Intrinsic {
             throw new Error('Expected second argument in Fn::Split to resolve to a string');
         }
 
-        const result = splitString(sourceString, delimiter);
+        const result = this.stringUtils.splitString(sourceString, delimiter);
         log.trace(`fnSplit: Result is "${JSON.stringify(result)}"`);
         return result;
     }
