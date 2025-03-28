@@ -47,13 +47,7 @@
                 "PolicyDocument": {
                     "Statement": [
                         {
-                            "Action": [
-                                "kms:Decrypt",
-                                "kms:Encrypt",
-                                "logs:CreateLogGroup",
-                                "logs:CreateLogStream",
-                                "logs:PutLogEvents"
-                            ],
+                            "Action": ["kms:Decrypt", "kms:Encrypt", "logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"],
                             "Effect": "Allow",
                             "Resource": "*"
                         },

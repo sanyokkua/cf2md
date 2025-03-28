@@ -5,13 +5,5 @@ module.exports = {
     transform: {
         '^.+\\.tsx?$': 'ts-jest',
     },
-    coveragePathIgnorePatterns: [
-        'node_modules',
-        'errors',
-        'constants',
-        'index.ts',
-        'cloudformation-model.ts',
-        '\\.module\\.ts',
-        '\\.mock\\.ts',
-    ],
+    coveragePathIgnorePatterns: ['node_modules', 'errors', 'constants', 'index.ts', 'cloudformation-model.ts', '\\.module\\.ts', '\\.mock\\.ts'],
 };

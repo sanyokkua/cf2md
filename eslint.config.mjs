@@ -10,18 +10,7 @@ export default tseslint.config(
         files: ['**/*.ts'],
     },
     {
-        ignores: [
-            '**/node_modules/',
-            '.git/',
-            '.config/',
-            '.jest/',
-            '.husky/',
-            '.gitignore/',
-            'gitignore/',
-            '**/*.test.ts',
-            '**/*.js',
-            '**/*.mjs',
-        ],
+        ignores: ['**/node_modules/', '.git/', '.config/', '.jest/', '.husky/', '.gitignore/', 'gitignore/', '**/*.test.ts', '**/*.js', '**/*.mjs'],
     },
     {
         languageOptions: {

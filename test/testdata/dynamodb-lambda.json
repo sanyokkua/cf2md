@@ -15,10 +15,7 @@
                     ],
                     "Version": "2012-10-17"
                 },
-                "ManagedPolicyArns": [
-                    "arn:aws:iam::123456789012:policy/generic-policy",
-                    "arn:aws:iam::123456789012:policy/shared-generic-policy"
-                ],
+                "ManagedPolicyArns": ["arn:aws:iam::123456789012:policy/generic-policy", "arn:aws:iam::123456789012:policy/shared-generic-policy"],
                 "PermissionsBoundary": "arn:aws:iam::123456789012:policy/org-boundary-policy"
             }
         },
