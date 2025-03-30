@@ -12,13 +12,14 @@ export class FnToJsonStringIntrinsic implements Intrinsic {
         log.trace('fnToJsonString is called');
         this.intrinsicUtils.validateIntrinsic(object, CfIntrinsicFunctions.Fn_ToJsonString);
         const value = object as FnToJsonString;
+        const fnValueObj = value[CfIntrinsicFunctions.Fn_ToJsonString];
 
-        if (typeof value[CfIntrinsicFunctions.Fn_ToJsonString] === 'string') {
-            log.trace(`fnToJsonString: Value is a string: "${value[CfIntrinsicFunctions.Fn_ToJsonString]}"`);
-            return value[CfIntrinsicFunctions.Fn_ToJsonString];
+        if (typeof fnValueObj === 'string') {
+            log.trace(`fnToJsonString: Value is a string: "${fnValueObj}"`);
+            return fnValueObj;
         }
 
-        const resolvedObject = resolveValue(value, ctx);
+        const resolvedObject = resolveValue(fnValueObj, ctx);
         if (typeof resolvedObject === 'string') {
             log.trace(`fnToJsonString: Resolved object is a string: "${resolvedObject}"`);
             return resolvedObject;

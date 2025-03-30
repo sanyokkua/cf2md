@@ -37,16 +37,18 @@ export class FnEqualsIntrinsic implements Intrinsic {
     }
 
     deepEqual(a: unknown, b: unknown): boolean {
-        if (a === b) {
-            return true;
-        } // Strictly equal objects are deeply equal.
         if (a == null || b == null) {
+            // One is null/undefined but not both.
             return false;
-        } // One is null/undefined but not both.
+        }
         if (typeof a !== typeof b) {
+            // Types must be identical.
             return false;
-        } // Types must be identical.
-
+        }
+        if (a === b) {
+            // Strictly equal objects are deeply equal.
+            return true;
+        }
         if (a instanceof Date && b instanceof Date) {
             return a.getTime() === b.getTime(); // Compare dates by time.
         }

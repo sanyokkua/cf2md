@@ -35,7 +35,6 @@ describe('FnEqualsIntrinsic', () => {
 
     it('should return true for strictly equal pre-resolved values', () => {
         const equalsObject = { 'Fn::Equals': ['a', 'a'] };
-
         const result = intrinsic.resolveValue(equalsObject, mockContext, mockResolveValue);
         expect(result).toBe(true);
         expect(mockResolveValue).toHaveBeenCalledTimes(2);
@@ -72,7 +71,6 @@ describe('FnEqualsIntrinsic', () => {
         const obj1 = { a: 1, b: { c: 2 } };
         const obj2 = { b: { c: 2 }, a: 1 };
         const equalsObject = { 'Fn::Equals': [obj1, obj2] };
-
         const result = intrinsic.resolveValue(equalsObject, mockContext, mockResolveValue);
         expect(result).toBe(true);
         expect(mockResolveValue).toHaveBeenCalledTimes(2);
@@ -190,5 +188,59 @@ describe('FnEqualsIntrinsic', () => {
         const equalsPrimitiveObject = { 'Fn::Equals': [1, { a: 1 }] };
         expect(intrinsic.resolveValue(equalsPrimitiveObject, mockContext, mockResolveValue)).toBe(false);
         expect(mockResolveValue).toHaveBeenCalledTimes(4);
+    });
+
+    describe('deepEqual method', () => {
+        it('should return true for deeply equal arrays', () => {
+            expect(intrinsic.deepEqual([1, 2], [1, 2])).toBe(true);
+        });
+
+        it('should return false for arrays of different lengths', () => {
+            expect(intrinsic.deepEqual([1, 2], [1])).toBe(false);
+        });
+
+        it('should return true for deeply equal nested arrays', () => {
+            expect(intrinsic.deepEqual([1, [2, 3]], [1, [2, 3]])).toBe(true);
+        });
+
+        it('should return false for deeply not equal nested arrays', () => {
+            expect(intrinsic.deepEqual([1, [2, 3]], [1, [2, 4]])).toBe(false);
+        });
+
+        it('should return true for deeply equal Dates', () => {
+            const date1 = new Date('2023-01-01T00:00:00.000Z');
+            const date2 = new Date('2023-01-01T00:00:00.000Z');
+            expect(intrinsic.deepEqual(date1, date2)).toBe(true);
+        });
+
+        it('should return false for deeply not equal Dates', () => {
+            const date1 = new Date('2023-01-01T00:00:00.000Z');
+            const date2 = new Date('2023-01-02T00:00:00.000Z');
+            expect(intrinsic.deepEqual(date1, date2)).toBe(false);
+        });
+
+        it('should return true for deeply equal RegExps', () => {
+            const regex1 = /abc/g;
+            const regex2 = /abc/g;
+            expect(intrinsic.deepEqual(regex1, regex2)).toBe(true);
+        });
+
+        it('should return false for deeply not equal RegExps', () => {
+            const regex1 = /abc/g;
+            const regex2 = /abd/g;
+            expect(intrinsic.deepEqual(regex1, regex2)).toBe(false);
+        });
+
+        it('should return false for two nulls', () => {
+            expect(intrinsic.deepEqual(null, null)).toBe(false);
+        });
+
+        it('should return false for two different types', () => {
+            expect(intrinsic.deepEqual(1, '1')).toBe(false);
+        });
+
+        it('should return false for two different objects', () => {
+            expect(intrinsic.deepEqual({ a: 1, b: 2 }, { a: 1, b: 2, c: 3 })).toBe(false);
+        });
     });
 });

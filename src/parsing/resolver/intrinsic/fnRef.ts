@@ -19,7 +19,7 @@ export class FnRefIntrinsic implements Intrinsic {
 
         if (typeof value.Ref !== 'string') {
             log.trace('fnRef: Ref is not a string, resolving value');
-            const resolvedKey = resolveValue(value, ctx);
+            const resolvedKey = resolveValue(value.Ref, ctx);
             if (typeof resolvedKey !== 'string') {
                 log.warn('fnRef: Resolved key is not a string', resolvedKey);
                 throw new Error('Key was not resolved as a string');
