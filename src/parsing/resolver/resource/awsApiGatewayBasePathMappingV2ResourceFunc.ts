@@ -10,9 +10,9 @@ export class AwsApiGatewayBasePathMappingV2Resource extends BaseResource {
             const region = ctx.getRegion();
             const typedResource = resource as ApiGatewayBasePathMappingV2Resource;
             const domainName = this.resourceUtils.resolveStringWithDefault(
-                typedResource.Properties.DomainName,
+                typedResource.Properties.DomainNameArn,
                 'default-domain',
-                `${logicalId}.Properties.DomainName`,
+                `${logicalId}.Properties.DomainNameArn`,
                 ctx,
                 valueResolver,
             );

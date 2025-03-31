@@ -78,5 +78,29 @@ describe('IntrinsicResolverImpl', () => {
             expect(stubInstanceFirst).toBeDefined();
             expect(stubInstanceFirst).toBe(stubInstanceSecond);
         });
+
+        describe.each([
+            CfIntrinsicFunctions.Ref,
+            CfIntrinsicFunctions.Fn_Not,
+            CfIntrinsicFunctions.Fn_And,
+            CfIntrinsicFunctions.Fn_Contains,
+            CfIntrinsicFunctions.Fn_Or,
+            CfIntrinsicFunctions.Fn_Equals,
+            CfIntrinsicFunctions.Fn_If,
+            CfIntrinsicFunctions.Fn_ToJsonString,
+            CfIntrinsicFunctions.Fn_GetAZs,
+            CfIntrinsicFunctions.Fn_GetAtt,
+            CfIntrinsicFunctions.Fn_FindInMap,
+            CfIntrinsicFunctions.Fn_Sub,
+            CfIntrinsicFunctions.Fn_ImportValue,
+            CfIntrinsicFunctions.Fn_Split,
+            CfIntrinsicFunctions.Fn_Join,
+            CfIntrinsicFunctions.Fn_Select,
+            CfIntrinsicFunctions.Fn_Base64,
+        ])('Resolver Test', (intrinsicName) => {
+            it(`${intrinsicName} should be defined`, () => {
+                expect(resolver.getIntrinsic(intrinsicName)).toBeDefined();
+            });
+        });
     });
 });

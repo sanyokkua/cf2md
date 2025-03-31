@@ -19,18 +19,16 @@ export class AwsPipesPipeResource extends BaseResource {
             return this.arnGenFunc(context);
         }
         if (key === 'CreationTime') {
-            const dateTime = new Date().toISOString();
-            return dateTime;
+            return new Date().toISOString();
         }
         if (key === 'CurrentState') {
-            return 'RUNTIME_CurrentState';
+            return 'STUB_CurrentState';
         }
         if (key === 'LastModifiedTime') {
-            const dateTime = new Date().toISOString();
-            return dateTime;
+            return new Date().toISOString();
         }
         if (key === 'StateReason') {
-            return 'RUNTIME_StateReason';
+            return 'STUB_StateReason';
         }
 
         return this.idGenFunc(context);

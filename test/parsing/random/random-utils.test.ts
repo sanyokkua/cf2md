@@ -1,7 +1,7 @@
 import { RandomUtilsImpl } from '../../../src/parsing/random/random-utils';
 import { RandomUtils } from '../../../src/parsing/types/util-service-types';
 
-describe('random-utils', () => {
+describe('RandomUtils', () => {
     let randomUtils: RandomUtils;
 
     beforeEach(() => {
@@ -26,6 +26,10 @@ describe('random-utils', () => {
             expect(str.length).toBe(fixedLength);
             expect(str).toMatch(allowedCharsRegex);
         });
+
+        it('should throw an error if maxLength is less than minLength', () => {
+            expect(() => randomUtils.randomString(10, 5)).toThrow('maxLength must be greater than or equal to minLength');
+        });
     });
 
     describe('randomInteger', () => {
@@ -44,7 +48,7 @@ describe('random-utils', () => {
         });
 
         it('should return the minimum value when Math.random returns 0', () => {
-            const spy = jest.spyOn(Math, 'random').mockReturnValue(0); // Always returns 0
+            const spy = jest.spyOn(Math, 'random').mockReturnValue(0);
             const min = 10;
             const max = 20;
             const num = randomUtils.randomInteger(min, max);
@@ -53,14 +57,16 @@ describe('random-utils', () => {
         });
 
         it('should return the maximum value when Math.random returns a value close to 1', () => {
-            // For min = 10, max = 20:
-            // Calculation: Math.floor(0.9999 * (11)) = Math.floor(10.9989) = 10, then + 10 equals 20.
             const spy = jest.spyOn(Math, 'random').mockReturnValue(0.9999);
             const min = 10;
             const max = 20;
             const num = randomUtils.randomInteger(min, max);
             expect(num).toBe(max);
             spy.mockRestore();
+        });
+
+        it('should throw an error if max is less than min', () => {
+            expect(() => randomUtils.randomInteger(20, 10)).toThrow('max must be greater than or equal to min');
         });
     });
 
@@ -104,21 +110,23 @@ describe('random-utils', () => {
             expect(arr.length).toBe(maxItems);
             spy.mockRestore();
         });
+
+        it('should throw an error if maxItems is less than minItems', () => {
+            expect(() => randomUtils.randomArray(constantGenerator, 5, 3)).toThrow('maxItems must be greater than or equal to minItems');
+        });
     });
 
     describe('shortUuid', () => {
-        it('should return shortuid', () => {
+        it('should return a 12-character string without dashes', () => {
             const result = randomUtils.shortUuid();
-            // 5fe08ca9c606
             expect(result.length).toBe(12);
             expect(result.includes('-')).toBeFalsy();
         });
     });
 
     describe('fullUuid', () => {
-        it('should return fullUuid', () => {
+        it('should return a full uuid string with dashes', () => {
             const result = randomUtils.fullUuid();
-            // 5eddceb5-891e-4c4c-b934-00df509c7299 -> 5 parts
             expect(result.length).toBe(36);
             expect(result.includes('-')).toBeTruthy();
             expect(result.split('-').length).toBe(5);

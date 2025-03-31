@@ -29,14 +29,7 @@ export class AwsEventsConnectionResource extends BaseResource {
             );
         }
         if (key === 'SecretArn') {
-            const resTyped = resource as EventsConnectionResource;
-            return this.resourceUtils.resolveStringWithDefault(
-                resTyped.Properties.SecretArn,
-                'SecretsArn',
-                `${logicalId}.Properties.SecretArn`,
-                ctx,
-                valueResolver,
-            );
+            return 'STUB_SecretArn';
         }
         return this.idGenFunc(context);
     }

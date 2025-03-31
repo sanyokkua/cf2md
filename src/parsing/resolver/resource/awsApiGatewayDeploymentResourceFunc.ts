@@ -17,7 +17,6 @@ export class AwsApiGatewayDeploymentResource extends BaseResource {
             );
             const deploymentId = this.idGenFunc(context);
 
-            // Construct the ARN per the standard format for API Gateway deployments.
             resource._arn = `arn:${partition}:apigateway:${region}::/restapis/${restApiId}/deployments/${deploymentId}`;
         }
         return resource._arn;

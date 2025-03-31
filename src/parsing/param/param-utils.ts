@@ -134,9 +134,6 @@ export class ParserUtilsImpl implements ParserUtils {
 
         log.info(`Merge completed. Total parameters processed: ${String(mergeStats.totalParamsProcessed)}`);
         log.info(`Overridden parameters: ${mergeStats.overriddenParams.join(', ')}`);
-        if (mergeStats.missingRequiredParams.length > 0) {
-            log.warn(`Missing required parameters: ${mergeStats.missingRequiredParams.join(', ')}`);
-        }
         log.info('Merge statistics:', mergeStats);
 
         return [merged, mergeStats];

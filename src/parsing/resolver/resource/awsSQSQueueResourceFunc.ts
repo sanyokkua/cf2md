@@ -12,7 +12,7 @@ export class AwsSQSQueueResource extends BaseResource {
         if (key === 'QueueName') {
             const region = ctx.getRegion();
             const accountId = ctx.getAccountId();
-            const queueUrl = this.arnGenFunc(context);
+            const queueUrl = this.idGenFunc(context);
             const prefix = `https://sqs.${region}.amazonaws.com/${accountId}/`;
             return removePrefixIfPresent(queueUrl, prefix);
         }

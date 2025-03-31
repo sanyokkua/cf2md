@@ -11,10 +11,10 @@ export class AwsS3BucketResource extends BaseResource {
             return this.arnGenFunc(context);
         }
         if (key === 'DomainName') {
-            return 'RUNTIME_DomainName';
+            return 'STUB_DomainName';
         }
         if (key === 'DualStackDomainName') {
-            return 'RUNTIME_DualStackDomainName';
+            return 'STUB_DualStackDomainName';
         }
         if (key === 'MetadataTableConfiguration.S3TablesDestination.TableArn') {
             return this.resourceUtils.resolveStringWithDefault(

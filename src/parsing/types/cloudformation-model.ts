@@ -1,4 +1,4 @@
-import { StringKeyObject } from '../../common/types/common-types';
+import { StringKeyObject } from '../../common';
 
 export type ObjectOfStringTypes = { [key: string]: StringType };
 
@@ -4353,7 +4353,7 @@ export interface ApiGatewayV2RouteResponseResource extends CommonResource {
  *
  * @see https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-apigatewayv2-vpclink.html
  */
-export interface AWSApiGatewayV2VpcLinkResource extends CommonResource {
+export interface ApiGatewayV2VpcLinkResource extends CommonResource {
     Type: 'AWS::ApiGatewayV2::VpcLink';
     Properties: {
         Name: StringType;
@@ -5024,7 +5024,7 @@ export interface GlueTriggerResource extends CommonResource {
 }
 
 export type CloudFormationResource =
-    | AWSApiGatewayV2VpcLinkResource
+    | ApiGatewayV2VpcLinkResource
     | ApiGatewayAccountResource
     | ApiGatewayApiKeyResource
     | ApiGatewayAuthorizerResource

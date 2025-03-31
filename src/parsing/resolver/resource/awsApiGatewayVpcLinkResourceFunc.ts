@@ -1,3 +1,4 @@
+import { ApiGatewayVpcLinkResource } from '../../types/cloudformation-model';
 import { IntrinsicContext } from '../../types/intrinsic-types';
 import { BaseResource } from './BaseResourceImpl';
 
@@ -16,7 +17,15 @@ export class AwsApiGatewayVpcLinkResource extends BaseResource {
     idGenFunc(context: IntrinsicContext): string {
         const { ctx, resource } = context;
         if (!resource._id) {
-            resource._id = this.resourceUtils.generatePrefixedId('vpclink', 4, ctx);
+            const typedRes = resource as ApiGatewayVpcLinkResource;
+            resource._id = this.resourceUtils.generateNameId(
+                typedRes.Properties.Name,
+                `${context.logicalId}.Properties.Name`,
+                'vpclink',
+                ctx,
+                context.valueResolver,
+                4,
+            );
         }
         return resource._id;
     }

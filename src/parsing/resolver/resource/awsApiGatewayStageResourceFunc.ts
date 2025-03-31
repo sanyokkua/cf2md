@@ -23,14 +23,7 @@ export class AwsApiGatewayStageResource extends BaseResource {
                 ctx,
                 valueResolver,
             );
-            const stageName = this.resourceUtils.resolveStringWithDefault(
-                resTyped.Properties.StageName,
-                `${logicalId}.Properties.StageName`,
-                logicalId,
-                ctx,
-                valueResolver,
-            );
-
+            const stageName = this.idGenFunc(context);
             resource._arn = `arn:${partition}:apigateway:${region}::/restapis/${restApiId}/stages/${stageName}`;
         }
         return resource._arn;
