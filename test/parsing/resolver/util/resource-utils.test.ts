@@ -96,6 +96,26 @@ describe('ResourceUtilsImpl', () => {
             expect(result).toBe('UNIQUE');
             expect(mockRandomUtils.randomString).toHaveBeenCalledTimes(3);
         });
+
+        test('retries until max attempts exceeded', () => {
+            // Simulate first two attempts produce duplicate values, third is unique.
+            mockRandomUtils.randomString
+                .mockReturnValueOnce('DUPLICATE1')
+                .mockReturnValueOnce('DUPLICATE2')
+                .mockReturnValueOnce('DUPLICATE3')
+                .mockReturnValueOnce('DUPLICATE4')
+                .mockReturnValueOnce('DUPLICATE5')
+                .mockReturnValueOnce('DUPLICATE6')
+                .mockReturnValueOnce('DUPLICATE7')
+                .mockReturnValueOnce('DUPLICATE8')
+                .mockReturnValueOnce('DUPLICATE9')
+                .mockReturnValueOnce('DUPLICATE10');
+            dummyCtx.isIdExists.mockReturnValue(true);
+
+            const result = resourceUtils.generateAlphaNumeric(6, dummyCtx);
+            expect(result).toBe('DUPLICATE10');
+            expect(mockRandomUtils.randomString).toHaveBeenCalledTimes(10);
+        });
     });
 
     describe('shortUuid', () => {
@@ -117,6 +137,24 @@ describe('ResourceUtilsImpl', () => {
             expect(result).toBe('unique-short');
             expect(mockRandomUtils.shortUuid).toHaveBeenCalledTimes(3);
         });
+        test('retries until max attempts exceeded', () => {
+            mockRandomUtils.shortUuid
+                .mockReturnValueOnce('dup1')
+                .mockReturnValueOnce('dup2')
+                .mockReturnValueOnce('dup3')
+                .mockReturnValueOnce('dup4')
+                .mockReturnValueOnce('dup5')
+                .mockReturnValueOnce('dup6')
+                .mockReturnValueOnce('dup7')
+                .mockReturnValueOnce('dup8')
+                .mockReturnValueOnce('dup9')
+                .mockReturnValueOnce('dup10');
+            dummyCtx.isIdExists.mockReturnValue(true);
+
+            const result = resourceUtils.shortUuid(dummyCtx);
+            expect(result).toBe('dup10');
+            expect(mockRandomUtils.shortUuid).toHaveBeenCalledTimes(10);
+        });
     });
 
     describe('fullUuid', () => {
@@ -137,6 +175,25 @@ describe('ResourceUtilsImpl', () => {
             const result = resourceUtils.fullUuid(dummyCtx);
             expect(result).toBe('unique-full');
             expect(mockRandomUtils.fullUuid).toHaveBeenCalledTimes(2);
+        });
+
+        test('retries until max attempts exceeded', () => {
+            mockRandomUtils.fullUuid
+                .mockReturnValueOnce('dup-full1')
+                .mockReturnValueOnce('dup-full2')
+                .mockReturnValueOnce('dup-full3')
+                .mockReturnValueOnce('dup-full4')
+                .mockReturnValueOnce('dup-full5')
+                .mockReturnValueOnce('dup-full6')
+                .mockReturnValueOnce('dup-full7')
+                .mockReturnValueOnce('dup-full8')
+                .mockReturnValueOnce('dup-full9')
+                .mockReturnValueOnce('dup-full10');
+            dummyCtx.isIdExists.mockReturnValue(true);
+
+            const result = resourceUtils.fullUuid(dummyCtx);
+            expect(result).toBe('dup-full10');
+            expect(mockRandomUtils.fullUuid).toHaveBeenCalledTimes(10);
         });
     });
 

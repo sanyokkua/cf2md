@@ -119,7 +119,7 @@ export class ResourceUtilsImpl implements ResourceUtils {
         defaultNamePattern: string,
         ctx: ResolvingContext,
         resolveValue: ValueResolverFunc,
-        alphanumericLength: number = 6,
+        alphanumericLength: number,
     ): string {
         log.trace(`Called generateNameId, with nameFieldPath: ${nameFieldPath}, defaultNamePattern: ${defaultNamePattern}`, nameFieldPath);
         const defaultName = this.generatePrefixedId(defaultNamePattern, alphanumericLength, ctx);

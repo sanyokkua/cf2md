@@ -7,5 +7,14 @@ module.exports = {
     },
     setupFiles: ['<rootDir>/test/setup.ts'],
     verbose: false,
-    coveragePathIgnorePatterns: ['node_modules', 'errors', 'constants', 'index.ts', 'cloudformation-model.ts', '\\.module\\.ts', '\\.mock\\.ts'],
+    coveragePathIgnorePatterns: [
+        'node_modules',
+        'test',
+        'errors',
+        'constants',
+        'index.ts',
+        'cloudformation-model.ts',
+        '\\.module\\.ts',
+        '\\.mock\\.ts',
+    ],
 };

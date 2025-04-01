@@ -130,6 +130,26 @@ describe('ParserUtilsImpl', () => {
             expect(mergeStats.totalParamsProcessed).toBeGreaterThan(0);
             expect(mergeStats.overriddenParams).toEqual(expect.arrayContaining(['ParamA', 'ExtraParam']));
         });
+
+        describe('replaceParamsWithUserDefined - missing value fallback branch', () => {
+            test('handles parameter missing value and generated stub (fallback branch)', () => {
+                const templateParams = [
+                    {
+                        paramKey: 'MissingParam',
+                        paramType: 'String',
+                        paramValue: null,
+                        isRequired: true,
+                        generatedStub: null,
+                    },
+                ];
+                const userParams: UserProvidedParam[] = [];
+
+                const [merged, mergeStats] = parserUtils.replaceParamsWithUserDefined(templateParams, userParams);
+
+                expect(merged['MissingParam']).toBeNull();
+                expect(mergeStats.missingRequiredParams).toContain('MissingParam');
+            });
+        });
     });
 
     describe('validateParamsList', () => {
@@ -151,6 +171,7 @@ describe('ParserUtilsImpl', () => {
         test('throws an error when required parameters are missing', () => {
             const params: ResultParamMap = {
                 Param1: 'value1',
+                Param2: null,
             };
             expect(() => parserUtils.validateParamsList(params)).toThrow(/Missing required parameters/);
         });
@@ -201,6 +222,16 @@ describe('ParserUtilsImpl', () => {
         test('generates stub for unrecognized type', () => {
             const result = parserUtils.generateStubOnType('UnknownType');
             expect(result).toBe('StubValue');
+        });
+
+        test("generates stub for 'List<Integer>' type", () => {
+            const result = parserUtils.generateStubOnType('List<Integer>');
+            expect(Array.isArray(result)).toBe(true);
+            expect(result).toHaveLength(3);
+            if (Array.isArray(result)) {
+                result.forEach((val) => expect(val).toBe(42));
+            }
+            expect(mockRandomUtils.randomArray).toHaveBeenCalledWith(expect.any(Function), 1, 10);
         });
     });
 });

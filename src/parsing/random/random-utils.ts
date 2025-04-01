@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { RandomUtils } from '../types/util-service-types';
 
 export class RandomUtilsImpl implements RandomUtils {
-    randomString(minLength: number = 5, maxLength: number = 15): string {
+    randomString(minLength: number, maxLength: number): string {
         if (maxLength < minLength) {
             throw new Error('maxLength must be greater than or equal to minLength');
         }
@@ -15,14 +15,14 @@ export class RandomUtilsImpl implements RandomUtils {
         return result;
     }
 
-    randomInteger(min: number = 1, max: number = 100): number {
+    randomInteger(min: number, max: number): number {
         if (max < min) {
             throw new Error('max must be greater than or equal to min');
         }
         return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 
-    randomArray<T>(itemGenerator: () => T, minItems: number = 1, maxItems: number = 5): T[] {
+    randomArray<T>(itemGenerator: () => T, minItems: number, maxItems: number): T[] {
         if (maxItems < minItems) {
             throw new Error('maxItems must be greater than or equal to minItems');
         }
