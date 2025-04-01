@@ -5,15 +5,25 @@ import { StringUtils } from '../types/util-types';
 
 export class StringUtilsImpl implements StringUtils {
     isBlankString(value?: string | null): boolean {
-        return isNullOrBlankString(value);
+        log.trace('[StringUtilsImpl.isBlankString] Entering with arguments:', { value });
+        const result = isNullOrBlankString(value);
+        log.trace('[StringUtilsImpl.isBlankString] Exiting with result:', result);
+        return result;
     }
 
     isValidNotBlankString(value?: string | null): value is string {
-        return !(this.isBlankString(value) || typeof value !== 'string');
+        log.trace('[StringUtilsImpl.isValidNotBlankString] Entering with arguments:', { value });
+        const isBlank = this.isBlankString(value);
+        log.debug('[StringUtilsImpl.isValidNotBlankString] isBlankString result:', isBlank);
+        const isString = typeof value === 'string';
+        log.debug("[StringUtilsImpl.isValidNotBlankString] typeof value === 'string':", isString);
+        const result = !isBlank && isString;
+        log.trace('[StringUtilsImpl.isValidNotBlankString] Exiting with result:', result);
+        return result;
     }
 
     parseTemplateString(template: string): string[] {
-        log.trace('Starting parseTemplateString');
+        log.trace('[StringUtilsImpl.parseTemplateString] Entering with arguments:', { template });
         const variables: string[] = [];
         // Regular expression to match placeholders wrapped in ${...}.
         const regex = /\${([^}]+)}/g;
@@ -22,16 +32,17 @@ export class StringUtilsImpl implements StringUtils {
         // Loop through all matches in the template string.
         while ((match = regex.exec(template)) !== null) {
             // Log each found variable name from the match.
-            log.debug(`Found variable: ${match[1]}`);
-            variables.push(match[1]);
+            const variableName = match[1];
+            log.debug('[StringUtilsImpl.parseTemplateString] Found variable:', variableName);
+            variables.push(variableName);
         }
 
-        log.trace(`Completed parseTemplateString. Variables found: ${variables.join(', ')}`);
+        log.trace('[StringUtilsImpl.parseTemplateString] Exiting with result:', variables);
         return variables;
     }
 
     replaceTemplateVariables(template: string, values: Record<string, unknown>): string {
-        log.trace('Starting replaceTemplateVariables');
+        log.trace('[StringUtilsImpl.replaceTemplateVariables] Entering with arguments:', { template, values });
         let result = template;
 
         // Iterate over each key in the values object.
@@ -44,19 +55,25 @@ export class StringUtilsImpl implements StringUtils {
             const regex = new RegExp(escapedPlaceholder, 'g');
 
             // Replace all occurrences of the placeholder with the corresponding value.
-            log.debug(`Replacing placeholder ${placeholder} with value:`, value);
+            log.debug('[StringUtilsImpl.replaceTemplateVariables] Replacing placeholder:', placeholder, 'with value:', value);
             result = result.replace(regex, String(value));
         }
 
-        log.trace('Completed replaceTemplateVariables');
+        log.trace('[StringUtilsImpl.replaceTemplateVariables] Exiting with result:', result);
         return result;
     }
 
     joinStrings(strings: string[], joinSymbol?: LineSeparator): string {
-        return joinStrings(strings, joinSymbol);
+        log.trace('[StringUtilsImpl.joinStrings] Entering with arguments:', { strings, joinSymbol });
+        const result = joinStrings(strings, joinSymbol);
+        log.trace('[StringUtilsImpl.joinStrings] Exiting with result:', result);
+        return result;
     }
 
     splitString(value: string, separator?: LineSeparator): string[] {
-        return splitString(value, separator);
+        log.trace('[StringUtilsImpl.splitString] Entering with arguments:', { value, separator });
+        const result = splitString(value, separator);
+        log.trace('[StringUtilsImpl.splitString] Exiting with result:', result);
+        return result;
     }
 }

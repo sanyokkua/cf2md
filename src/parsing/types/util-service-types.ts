@@ -25,6 +25,7 @@ export interface IntrinsicUtils {
     isIntrinsic(objectNode: unknown): boolean;
     getIntrinsicKey(objectNode: unknown): string;
     validateIntrinsic(objectNode: unknown, intrinsicKey: string): void;
+    deepEqual(a: unknown, b: unknown): boolean;
 }
 
 export interface ResourceUtils {

@@ -14,6 +14,7 @@ describe('FnOrIntrinsic', () => {
             validateIntrinsic: jest.fn(),
             isIntrinsic: jest.fn(),
             getIntrinsicKey: jest.fn(),
+            deepEqual: jest.fn(),
         } as jest.Mocked<IntrinsicUtils>;
 
         mockContext = {

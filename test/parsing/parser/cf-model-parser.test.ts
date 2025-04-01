@@ -87,7 +87,7 @@ describe('CfModelParserImpl', () => {
             expect(result.paramsToReview).toEqual([]);
         });
 
-        test('returns error ParsingResult when given an invalid template string', () => {
+        test('should catch the error during parsing', () => {
             // Arrange
             const badTemplate = '   '; // blank or invalid string
             mockStringUtils.isValidNotBlankString.mockReturnValue(false);
@@ -101,6 +101,26 @@ describe('CfModelParserImpl', () => {
             // extractErrorDetails is used on the thrown error. We check that errorMsg is a non-empty string.
             expect(result.errorMsg).toBeDefined();
             expect(typeof result.errorMsg).toBe('string');
+        });
+
+        test('returns error ParsingResult when given an invalid template string', () => {
+            // Arrange
+            const templateObj: CloudFormationTemplate = { Resources: {} };
+            const templateStr = JSON.stringify(templateObj);
+            mockStringUtils.isValidNotBlankString.mockReturnValue(true);
+            mockParserUtils.analyzeParams.mockImplementation(() => {
+                throw new Error('Test Exception');
+            });
+
+            // Act
+            const result = parser.parseTemplateJsonString(templateStr);
+
+            // Assert
+            expect(mockStringUtils.isValidNotBlankString).toHaveBeenCalledWith(templateStr);
+            expect(result.hasErrors).toBe(true);
+            expect(result.errorMsg).toBeDefined();
+            expect(typeof result.errorMsg).toBe('string');
+            expect(result.errorMsg).toBe('Error. Test Exception');
         });
     });
 

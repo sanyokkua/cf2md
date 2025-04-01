@@ -13,6 +13,7 @@ describe('FnIfIntrinsic', () => {
         mockIntrinsicUtils = {
             validateIntrinsic: jest.fn(),
             isIntrinsic: jest.fn(),
+            deepEqual: jest.fn(),
         } as unknown as jest.Mocked<IntrinsicUtils>;
 
         mockContext = {
@@ -97,14 +98,20 @@ describe('FnIfIntrinsic', () => {
 
     it('should throw an error if the value of Fn::If is not an array', () => {
         const invalidObject = { 'Fn::If': 'not an array' };
-        expect(() => intrinsic.resolveValue(invalidObject, mockContext, mockResolveValue)).toThrow('fnIf: Fn::If requires an array.');
+        expect(() => intrinsic.resolveValue(invalidObject, mockContext, mockResolveValue)).toThrow(
+            'fnIf: Fn::If requires an array with exactly 3 elements: [condition, valueIfTrue, valueIfFalse].',
+        );
     });
 
     it('should throw an error if the array within Fn::If does not have exactly 3 elements', () => {
         const invalidObject1 = { 'Fn::If': { val: true, val2: 'a' } };
-        expect(() => intrinsic.resolveValue(invalidObject1, mockContext, mockResolveValue)).toThrow('fnIf: Fn::If requires an array.');
+        expect(() => intrinsic.resolveValue(invalidObject1, mockContext, mockResolveValue)).toThrow(
+            'fnIf: Fn::If requires an array with exactly 3 elements: [condition, valueIfTrue, valueIfFalse].',
+        );
         const invalidObject2 = { 'Fn::If': true };
-        expect(() => intrinsic.resolveValue(invalidObject2, mockContext, mockResolveValue)).toThrow('fnIf: Fn::If requires an array.');
+        expect(() => intrinsic.resolveValue(invalidObject2, mockContext, mockResolveValue)).toThrow(
+            'fnIf: Fn::If requires an array with exactly 3 elements: [condition, valueIfTrue, valueIfFalse].',
+        );
     });
 
     it('should throw an error if the resolved condition is not a boolean', () => {

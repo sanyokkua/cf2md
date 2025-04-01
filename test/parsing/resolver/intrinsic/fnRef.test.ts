@@ -16,6 +16,7 @@ describe('FnRefIntrinsic', () => {
             validateIntrinsic: jest.fn(),
             isIntrinsic: jest.fn(),
             getIntrinsicKey: jest.fn(),
+            deepEqual: jest.fn(),
         } as jest.Mocked<IntrinsicUtils>;
 
         mockResolver = {
@@ -90,7 +91,7 @@ describe('FnRefIntrinsic', () => {
         mockContext.hasParameterName.mockReturnValue(false);
 
         expect(() => intrinsic.resolveValue(refObject, mockContext, mockResolveValue)).toThrow(
-            'InvalidKey is not found in context and among Resources logicalIds',
+            'InvalidKey is not found as a parameter or a resource in the template.',
         );
         expect(mockContext.hasParameterName).toHaveBeenCalledWith('InvalidKey');
         expect(mockResolver.getResourceIntrinsic).not.toHaveBeenCalled();
@@ -119,7 +120,7 @@ describe('FnRefIntrinsic', () => {
         const refObject = { Ref: { 'Fn::GetAtt': ['SomeResource', 'Id'] } };
         mockResolveValue.mockReturnValue(123);
 
-        expect(() => intrinsic.resolveValue(refObject, mockContext, mockResolveValue)).toThrow('Key was not resolved as a string');
+        expect(() => intrinsic.resolveValue(refObject, mockContext, mockResolveValue)).toThrow('The reference key was not resolved as a string.');
         expect(mockResolveValue).toHaveBeenCalledWith({ 'Fn::GetAtt': ['SomeResource', 'Id'] }, mockContext);
         expect(mockContext.hasParameterName).not.toHaveBeenCalled();
         expect(mockResolver.getResourceIntrinsic).not.toHaveBeenCalled();
@@ -131,7 +132,7 @@ describe('FnRefIntrinsic', () => {
         mockContext.hasParameterName.mockReturnValue(false);
 
         expect(() => intrinsic.resolveValue(refObject, mockContext, mockResolveValue)).toThrow(
-            'NonExistingResource is not found in context and among Resources logicalIds',
+            'NonExistingResource is not found as a parameter or a resource in the template.',
         );
         expect(mockContext.hasParameterName).toHaveBeenCalledWith('NonExistingResource');
         expect(mockResolver.getResourceIntrinsic).not.toHaveBeenCalled();

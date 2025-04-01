@@ -19,8 +19,9 @@ describe('FnAndIntrinsic', () => {
 
         originalTemplate = {
             Conditions: {
-                ConditionTrue: { Type: 'Condition', Properties: {} },
-                ConditionFalse: { Type: 'Condition', Properties: {} },
+                ConditionTrue: { Type: 'Condition' },
+                ConditionFalse: { Type: 'Condition' },
+                NonBooleanCondition: { Type: 'Condition' },
             },
             Resources: {},
         };
@@ -161,7 +162,9 @@ describe('FnAndIntrinsic', () => {
     it('should throw an error if a string condition is not "true", "false", or a condition name and does not resolve to a boolean', () => {
         const andObject = { 'Fn::And': ['invalid-condition'] };
         mockResolveValue.mockReturnValue('not a boolean');
-        expect(() => intrinsic.resolveValue(andObject, mockContext, mockResolveValue)).toThrow('fnAnd: Resolved condition is not a boolean.');
+        expect(() => intrinsic.resolveValue(andObject, mockContext, mockResolveValue)).toThrow(
+            'fnAnd: Resolved nested intrinsic condition is not a boolean.',
+        );
         expect(mockResolveValue).toHaveBeenCalledWith('invalid-condition', mockContext);
     });
 
@@ -171,5 +174,14 @@ describe('FnAndIntrinsic', () => {
         const result = intrinsic.resolveValue(andObject, mockContext, mockResolveValue);
         expect(result).toBe(true);
         expect(mockResolveValue).toHaveBeenCalledWith('custom-condition', mockContext);
+    });
+
+    it('should throw an error if a condition from the Conditions section resolves to a non-boolean value', () => {
+        const andObject = { 'Fn::And': ['NonBooleanCondition'] };
+        mockResolveValue.mockReturnValue('not a boolean');
+        expect(() => intrinsic.resolveValue(andObject, mockContext, mockResolveValue)).toThrow(
+            'fnAnd: Resolved condition from template "NonBooleanCondition" is not a boolean.',
+        );
+        expect(mockResolveValue).toHaveBeenCalledWith(originalTemplate.Conditions!['NonBooleanCondition'], mockContext);
     });
 });

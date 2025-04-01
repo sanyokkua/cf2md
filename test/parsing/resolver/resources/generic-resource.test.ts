@@ -153,7 +153,7 @@ describe('ResourceIntrinsic Implementations', () => {
             description: 'AwsApiGatewayAccountResource',
             getInstance: (utils) => new AwsApiGatewayAccountResource(utils),
             idGen: 'abcdef',
-            arnGen: 'arn:aws:apigateway:us-east-1::123456789012',
+            arnGen: 'arn:aws:apigateway:us-east-1::/abcdef',
             refFunc: 'abcdef',
             getAttFunc: {
                 '': 'abcdef',
@@ -195,12 +195,12 @@ describe('ResourceIntrinsic Implementations', () => {
             description: 'AwsApiGatewayBasePathMappingV2Resource',
             getInstance: (utils) => new AwsApiGatewayBasePathMappingV2Resource(utils),
             idGen: 'abcdef',
-            arnGen: 'arn:aws:apigateway:us-east-1::/domainnames/mydomain:arn/apimappings/abcdef',
+            arnGen: 'arn:aws:apigateway:us-east-1::/domainnames/mydomain:arn/basepathmappings/path',
             refFunc: 'abcdef',
             getAttFunc: {
                 '': 'abcdef',
             },
-            resource: { Properties: { DomainNameArn: 'mydomain:arn' } } as ApiGatewayBasePathMappingV2Resource,
+            resource: { Properties: { DomainNameArn: 'mydomain:arn', BasePath: 'path' } } as ApiGatewayBasePathMappingV2Resource,
         },
         {
             description: 'AwsApiGatewayClientCertificateResource',
@@ -244,7 +244,7 @@ describe('ResourceIntrinsic Implementations', () => {
             description: 'AwsApiGatewayDocumentationVersionResource',
             getInstance: (utils: any) => new AwsApiGatewayDocumentationVersionResource(utils),
             idGen: 'abcdef',
-            arnGen: 'arn:aws:apigateway:us-east-1:123456789012:/apis/api-123/documentation/versions/abcdef',
+            arnGen: 'arn:aws:apigateway:us-east-1:123456789012:/apis/api-123/documentation/versions/v1.0',
             refFunc: 'v1.0',
             getAttFunc: {
                 '': 'abcdef',

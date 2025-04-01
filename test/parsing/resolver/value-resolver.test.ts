@@ -39,6 +39,7 @@ describe('ValueResolver', () => {
             isIntrinsic: jest.fn(),
             getIntrinsicKey: jest.fn(),
             validateIntrinsic: jest.fn(),
+            deepEqual: jest.fn(),
         };
 
         mockIntrinsicResolver = {

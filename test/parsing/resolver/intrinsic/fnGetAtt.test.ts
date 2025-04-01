@@ -17,6 +17,7 @@ describe('FnGetAttIntrinsic', () => {
         mockIntrinsicUtils = {
             validateIntrinsic: jest.fn(),
             isIntrinsic: jest.fn(),
+            deepEqual: jest.fn(),
         } as unknown as jest.Mocked<IntrinsicUtils>;
 
         mockResolver = {
@@ -136,7 +137,7 @@ describe('FnGetAttIntrinsic', () => {
         const getAttObject = { 'Fn::GetAtt': [{ Ref: 'ResourceId' }, 'Arn'] };
         mockResolveValue.mockReturnValueOnce(123);
         expect(() => intrinsic.resolveValue(getAttObject, mockContext, mockResolveValue)).toThrow(
-            'Expected first parameter of Fn::GetAtt to be a string',
+            'Expected first parameter of fn::getatt (logical resource name) to be a string',
         );
         expect(mockResolveValue).toHaveBeenCalledWith({ Ref: 'ResourceId' }, mockContext);
     });
@@ -145,7 +146,7 @@ describe('FnGetAttIntrinsic', () => {
         const getAttObject = { 'Fn::GetAtt': ['ExistingResource', { Ref: 'AttributeName' }] };
         mockResolveValue.mockReturnValueOnce('ExistingResource').mockReturnValueOnce(456);
         expect(() => intrinsic.resolveValue(getAttObject, mockContext, mockResolveValue)).toThrow(
-            'Expected second parameter of Fn::GetAtt to be a string',
+            'Expected second parameter of fn::getatt (attribute name) to be a string',
         );
         expect(mockResolveValue).toHaveBeenCalledWith({ Ref: 'AttributeName' }, mockContext);
     });

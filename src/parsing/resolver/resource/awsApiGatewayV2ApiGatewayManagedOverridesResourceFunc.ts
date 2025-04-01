@@ -9,7 +9,7 @@ export class AwsApiGatewayV2ApiGatewayManagedOverridesResource extends BaseResou
             const accountId = ctx.getAccountId();
             const partition = ctx.getPartition();
             const resId = this.idGenFunc(context);
-
+            // Mock, probably there is no official arn for it
             resource._arn = `arn:${partition}:apigateway:${region}:${accountId}:${resId}`;
         }
         return resource._arn;

@@ -14,6 +14,7 @@ describe('FnContainsIntrinsic', () => {
         mockIntrinsicUtils = {
             validateIntrinsic: jest.fn(),
             isIntrinsic: jest.fn(),
+            deepEqual: jest.fn(),
         } as unknown as jest.Mocked<IntrinsicUtils>;
 
         mockContext = {
@@ -104,6 +105,7 @@ describe('FnContainsIntrinsic', () => {
         const list = [{ key: 'value' }, { key: 'other' }];
         const search = { key: 'value' };
         const containsObject = { 'Fn::Contains': [list, search] };
+        mockIntrinsicUtils.deepEqual.mockReturnValueOnce(true);
         const result = intrinsic.resolveValue(containsObject, mockContext, mockResolveValue);
         expect(result).toBe(true);
         expect(mockResolveValue).toHaveBeenCalledTimes(2);
@@ -118,6 +120,7 @@ describe('FnContainsIntrinsic', () => {
             }
             return arg;
         });
+        mockIntrinsicUtils.deepEqual.mockReturnValueOnce(true);
         const result = intrinsic.resolveValue(containsObject, mockContext, mockResolveValue);
         expect(result).toBe(true);
         expect(mockResolveValue).toHaveBeenCalledTimes(2);
@@ -133,6 +136,7 @@ describe('FnContainsIntrinsic', () => {
             }
             return arg;
         });
+        mockIntrinsicUtils.deepEqual.mockReturnValueOnce(true);
         const result = intrinsic.resolveValue(containsObject, mockContext, mockResolveValue);
         expect(result).toBe(true);
         expect(mockResolveValue).toHaveBeenCalledTimes(2);
@@ -159,7 +163,9 @@ describe('FnContainsIntrinsic', () => {
 
     it('should throw an error if the value of Fn::Contains is not an array', () => {
         const invalidObject = { 'Fn::Contains': 'not an array' };
-        expect(() => intrinsic.resolveValue(invalidObject, mockContext, mockResolveValue)).toThrow('fnContains: Fn::Contains requires an array.');
+        expect(() => intrinsic.resolveValue(invalidObject, mockContext, mockResolveValue)).toThrow(
+            'fnContains: Fn::Contains requires an array with two elements: [list, value].',
+        );
     });
 
     it('should throw an error if the first parameter does not resolve to an array', () => {

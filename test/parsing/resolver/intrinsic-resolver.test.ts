@@ -16,6 +16,7 @@ describe('IntrinsicResolverImpl', () => {
             isIntrinsic: jest.fn(),
             getIntrinsicKey: jest.fn(),
             validateIntrinsic: jest.fn(),
+            deepEqual: jest.fn(),
         };
 
         // Minimal mock for ResourceIntrinsicResolver

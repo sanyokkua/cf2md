@@ -13,6 +13,7 @@ describe('FnImportValueIntrinsic', () => {
         mockIntrinsicUtils = {
             validateIntrinsic: jest.fn(),
             isIntrinsic: jest.fn(),
+            deepEqual: jest.fn(),
         } as unknown as jest.Mocked<IntrinsicUtils>;
 
         mockContext = {

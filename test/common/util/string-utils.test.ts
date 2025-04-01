@@ -98,7 +98,7 @@ describe('string-utils', () => {
             const result = stringUtils.parseTemplateString(template);
             expect(result).toEqual(['name']);
             expect(debugSpy).toHaveBeenCalledTimes(1);
-            expect(debugSpy).toHaveBeenCalledWith('Found variable: name');
+            expect(debugSpy).toHaveBeenCalledWith('[StringUtilsImpl.parseTemplateString] Found variable:', 'name');
         });
 
         it('should extract multiple distinct placeholders', () => {
@@ -106,8 +106,8 @@ describe('string-utils', () => {
             const result = stringUtils.parseTemplateString(template);
             expect(result).toEqual(['first', 'second']);
             expect(debugSpy).toHaveBeenCalledTimes(2);
-            expect(debugSpy).toHaveBeenCalledWith('Found variable: first');
-            expect(debugSpy).toHaveBeenCalledWith('Found variable: second');
+            expect(debugSpy).toHaveBeenCalledWith('[StringUtilsImpl.parseTemplateString] Found variable:', 'first');
+            expect(debugSpy).toHaveBeenCalledWith('[StringUtilsImpl.parseTemplateString] Found variable:', 'second');
         });
 
         it('should extract repeated placeholders', () => {
@@ -159,7 +159,12 @@ describe('string-utils', () => {
             const values = { name: 'World' };
             const result = stringUtils.replaceTemplateVariables(template, values);
             expect(result).toBe('Hello World');
-            expect(debugSpy).toHaveBeenCalledWith('Replacing placeholder ${name} with value:', 'World');
+            expect(debugSpy).toHaveBeenCalledWith(
+                '[StringUtilsImpl.replaceTemplateVariables] Replacing placeholder:',
+                '${name}',
+                'with value:',
+                'World',
+            );
             expect(traceSpy).toHaveBeenCalledTimes(2);
         });
 
@@ -170,7 +175,12 @@ describe('string-utils', () => {
             expect(result).toBe('Hello John, John!');
             // Only one replacement loop since there's one key.
             expect(debugSpy).toHaveBeenCalledTimes(1);
-            expect(debugSpy).toHaveBeenCalledWith('Replacing placeholder ${name} with value:', 'John');
+            expect(debugSpy).toHaveBeenCalledWith(
+                '[StringUtilsImpl.replaceTemplateVariables] Replacing placeholder:',
+                '${name}',
+                'with value:',
+                'John',
+            );
         });
 
         it('should replace multiple different placeholders', () => {
@@ -203,7 +213,7 @@ describe('string-utils', () => {
             const values = { 'a+b': 5 };
             const result = stringUtils.replaceTemplateVariables(template, values);
             expect(result).toBe('Sum: 5');
-            expect(debugSpy).toHaveBeenCalledWith('Replacing placeholder ${a+b} with value:', 5);
+            expect(debugSpy).toHaveBeenCalledWith('[StringUtilsImpl.replaceTemplateVariables] Replacing placeholder:', '${a+b}', 'with value:', 5);
         });
 
         it('should leave the template unchanged if there are no placeholders', () => {

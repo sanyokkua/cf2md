@@ -15,6 +15,7 @@ describe('FnGetAZsIntrinsic', () => {
         mockIntrinsicUtils = {
             validateIntrinsic: jest.fn(),
             isIntrinsic: jest.fn(),
+            deepEqual: jest.fn(),
         } as unknown as jest.Mocked<IntrinsicUtils>;
 
         mockStringUtils = {

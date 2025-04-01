@@ -6,79 +6,55 @@ import { ResolvingContext, ValueResolverFunc } from '../../types/resolving-types
 import { IntrinsicUtils } from '../../types/util-service-types';
 
 export class FnEqualsIntrinsic implements Intrinsic {
-    constructor(private readonly intrinsicUtils: IntrinsicUtils) {}
+    constructor(private readonly intrinsicUtils: IntrinsicUtils) {
+        log.trace('[FnEqualsIntrinsic.constructor] Entering constructor.');
+        log.trace('[FnEqualsIntrinsic.constructor] intrinsicUtils:', this.intrinsicUtils);
+        log.trace('[FnEqualsIntrinsic.constructor] Exiting constructor.');
+    }
 
     resolveValue(object: unknown, ctx: ResolvingContext, resolveValue: ValueResolverFunc): unknown {
-        log.trace('fnEquals: Invocation started.', { object, context: ctx });
+        log.trace('[FnEqualsIntrinsic.resolveValue] Entering with arguments:', { object, ctx });
         this.intrinsicUtils.validateIntrinsic(object, CfIntrinsicFunctions.Fn_Equals);
 
         const value = object as FnEquals;
         const conditionArr = value[CfIntrinsicFunctions.Fn_Equals];
 
+        log.debug('[FnEqualsIntrinsic.resolveValue] Extracted array from Fn::Equals:', conditionArr);
+
         if (!Array.isArray(conditionArr)) {
-            throw new Error('fnEquals: Fn::Equals requires an array.');
+            const error = new Error('fnEquals: Fn::Equals requires an array.');
+            log.error('[FnEqualsIntrinsic.resolveValue] Error:', error);
+            throw error;
         }
 
+        log.trace('[FnEqualsIntrinsic.resolveValue] Resolving the first value:', conditionArr[0]);
         const resolved0 = resolveValue(conditionArr[0], ctx);
+        log.trace('[FnEqualsIntrinsic.resolveValue] Resolved first value:', resolved0);
+
+        log.trace('[FnEqualsIntrinsic.resolveValue] Resolving the second value:', conditionArr[1]);
         const resolved1 = resolveValue(conditionArr[1], ctx);
-        log.trace('fnEquals: Resolved values.', { resolved0, resolved1 });
+        log.trace('[FnEqualsIntrinsic.resolveValue] Resolved second value:', resolved1);
+
+        log.debug('[FnEqualsIntrinsic.resolveValue] Resolved values.', { resolved0, resolved1 });
 
         if (resolved0 === resolved1) {
-            log.trace('fnEquals: Values are strictly equal.');
+            log.trace('[FnEqualsIntrinsic.resolveValue] Values are strictly equal.');
+            log.trace('[FnEqualsIntrinsic.resolveValue] Exiting, returning:', true);
             return true;
         }
+
+        log.trace('[FnEqualsIntrinsic.resolveValue] Strict equality check failed.');
 
         if (typeof resolved0 === 'object' && resolved0 !== null && typeof resolved1 === 'object' && resolved1 !== null) {
-            return this.deepEqual(resolved0, resolved1);
+            log.trace('[FnEqualsIntrinsic.resolveValue] Both values are objects (and not null), performing deep equality check.');
+            const deepEqualResult = this.intrinsicUtils.deepEqual(resolved0, resolved1);
+            log.debug('[FnEqualsIntrinsic.resolveValue] Deep equality result:', deepEqualResult);
+            log.trace('[FnEqualsIntrinsic.resolveValue] Exiting, returning:', deepEqualResult);
+            return deepEqualResult;
         }
 
-        log.trace('fnEquals: Values are not equal.');
-        return false;
-    }
-
-    deepEqual(a: unknown, b: unknown): boolean {
-        if (a == null || b == null) {
-            // One is null/undefined but not both.
-            return false;
-        }
-        if (typeof a !== typeof b) {
-            // Types must be identical.
-            return false;
-        }
-        if (a === b) {
-            // Strictly equal objects are deeply equal.
-            return true;
-        }
-        if (a instanceof Date && b instanceof Date) {
-            return a.getTime() === b.getTime(); // Compare dates by time.
-        }
-
-        if (a instanceof RegExp && b instanceof RegExp) {
-            return a.toString() === b.toString(); // Compare regex patterns.
-        }
-
-        if (Array.isArray(a) && Array.isArray(b)) {
-            if (a.length !== b.length) {
-                return false;
-            } // Arrays must be same length.
-            return a.every((item, index) => this.deepEqual(item, b[index])); // Compare elements recursively.
-        }
-
-        if (typeof a === 'object' && typeof b === 'object') {
-            const aKeys = Object.keys(a as Record<string, unknown>);
-            const bKeys = Object.keys(b as Record<string, unknown>);
-
-            if (aKeys.length !== bKeys.length) {
-                return false;
-            } // Objects must have the same number of keys.
-
-            return aKeys.every(
-                (key) =>
-                    Object.prototype.hasOwnProperty.call(b, key) &&
-                    this.deepEqual((a as Record<string, unknown>)[key], (b as Record<string, unknown>)[key]),
-            );
-        }
-
+        log.trace('[FnEqualsIntrinsic.resolveValue] Values are not equal.');
+        log.trace('[FnEqualsIntrinsic.resolveValue] Exiting, returning:', false);
         return false;
     }
 }

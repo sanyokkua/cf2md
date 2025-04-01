@@ -15,6 +15,7 @@ describe('FnFindInMapIntrinsic', () => {
         mockIntrinsicUtils = {
             validateIntrinsic: jest.fn(),
             isIntrinsic: jest.fn(),
+            deepEqual: jest.fn(),
         } as unknown as jest.Mocked<IntrinsicUtils>;
 
         originalTemplate = {
@@ -92,7 +93,7 @@ describe('FnFindInMapIntrinsic', () => {
     it('should throw an error if the resolved map name is not a string', () => {
         const findInMapObject = { 'Fn::FindInMap': [{ Ref: 'MapName' }, 'us-east-1', 'AMI'] };
         mockResolveValue.mockReturnValueOnce(123);
-        expect(() => intrinsic.resolveValue(findInMapObject, mockContext, mockResolveValue)).toThrow('Expected map name to be a string');
+        expect(() => intrinsic.resolveValue(findInMapObject, mockContext, mockResolveValue)).toThrow('Expected mapname to be a string');
         expect(mockResolveValue).toHaveBeenCalledWith({ Ref: 'MapName' }, mockContext);
     });
 

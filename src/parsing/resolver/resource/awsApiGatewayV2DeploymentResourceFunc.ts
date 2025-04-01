@@ -11,7 +11,6 @@ export class AwsApiGatewayV2DeploymentResource extends BaseResource {
             const partition = ctx.getPartition();
             const apiId = this.resourceUtils.resolveString(resTyped.Properties.ApiId, `${logicalId}.Properties.ApiId`, ctx, valueResolver);
             const deploymentId = this.idGenFunc(context);
-
             resource._arn = `arn:${partition}:apigateway:${region}::/apis/${apiId}/deployments/${deploymentId}`;
         }
         return resource._arn;

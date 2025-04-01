@@ -23,7 +23,6 @@ export class AwsApiGatewayBasePathMappingResource extends BaseResource {
                 ctx,
                 valueResolver,
             );
-            // Construct the ARN. Note: Verify this pattern with the AWS Guide if necessary.
             resource._arn = `arn:${partition}:apigateway:${region}::/domainnames/${domainName}/basepathmappings/${basePath}`;
         }
         return resource._arn;

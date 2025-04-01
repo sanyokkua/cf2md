@@ -16,9 +16,14 @@ export class AwsApiGatewayBasePathMappingV2Resource extends BaseResource {
                 ctx,
                 valueResolver,
             );
-
-            const mappingId = this.idGenFunc(context);
-            resource._arn = `arn:${partition}:apigateway:${region}::/domainnames/${domainName}/apimappings/${mappingId}`;
+            const basePath = this.resourceUtils.resolveStringWithDefault(
+                typedResource.Properties.BasePath,
+                '',
+                `${logicalId}.Properties.BasePath`,
+                ctx,
+                valueResolver,
+            );
+            resource._arn = `arn:${partition}:apigateway:${region}::/domainnames/${domainName}/basepathmappings/${basePath}`;
         }
         return resource._arn;
     }

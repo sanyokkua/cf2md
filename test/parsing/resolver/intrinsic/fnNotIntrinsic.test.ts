@@ -14,6 +14,7 @@ describe('FnNotIntrinsic', () => {
             validateIntrinsic: jest.fn(),
             isIntrinsic: jest.fn(),
             getIntrinsicKey: jest.fn(),
+            deepEqual: jest.fn(),
         } as jest.Mocked<IntrinsicUtils>;
 
         mockContext = {
@@ -38,6 +39,13 @@ describe('FnNotIntrinsic', () => {
         const notObject = { 'Fn::Not': [true] };
         intrinsic.resolveValue(notObject, mockContext, mockResolveValue);
         expect(mockIntrinsicUtils.validateIntrinsic).toHaveBeenCalledWith(notObject, CfIntrinsicFunctions.Fn_Not);
+    });
+
+    it('should throw an error if incorrect object is passed', () => {
+        const notObject = { 'Fn::Not': 'MyCondition' };
+        expect(() => intrinsic.resolveValue(notObject, mockContext, mockResolveValue)).toThrow(
+            'fnNot: Fn::Not requires an array with exactly one element.',
+        );
     });
 
     it('should return the negation of a direct boolean true', () => {
@@ -133,9 +141,7 @@ describe('FnNotIntrinsic', () => {
         const notObject = { 'Fn::Not': [nestedIntrinsic] };
         mockIntrinsicUtils.isIntrinsic.mockReturnValueOnce(true);
         mockResolveValue.mockReturnValueOnce('not-a-boolean');
-        expect(() => intrinsic.resolveValue(notObject, mockContext, mockResolveValue)).toThrow(
-            'fnNot: Resolved nested intrinsic did not yield a boolean.',
-        );
+        expect(() => intrinsic.resolveValue(notObject, mockContext, mockResolveValue)).toThrow('fnNot: Resolved condition is not a boolean.');
         expect(mockResolveValue).toHaveBeenCalledWith(nestedIntrinsic, mockContext);
     });
 

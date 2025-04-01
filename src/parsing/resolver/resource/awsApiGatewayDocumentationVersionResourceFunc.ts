@@ -27,8 +27,8 @@ export class AwsApiGatewayDocumentationVersionResource extends BaseResource {
                 ctx,
                 valueResolver,
             );
-            const versionId = this.idGenFunc(context);
-            resource._arn = `arn:${partition}:apigateway:${region}:${accountId}:/apis/${apiId}/documentation/versions/${versionId}`;
+            const version = this.refFunc(context);
+            resource._arn = `arn:${partition}:apigateway:${region}:${accountId}:/apis/${apiId}/documentation/versions/${version}`;
         }
         return resource._arn;
     }

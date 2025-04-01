@@ -14,6 +14,7 @@ describe('FnToJsonStringIntrinsic', () => {
             validateIntrinsic: jest.fn(),
             isIntrinsic: jest.fn(),
             getIntrinsicKey: jest.fn(),
+            deepEqual: jest.fn(),
         } as jest.Mocked<IntrinsicUtils>;
 
         mockContext = {
@@ -84,28 +85,36 @@ describe('FnToJsonStringIntrinsic', () => {
     it('should throw an error if the resolved object is null', () => {
         const toJsonStringObject = { 'Fn::ToJsonString': { Ref: 'NullValue' } };
         mockResolveValue.mockReturnValue(null);
-        expect(() => intrinsic.resolveValue(toJsonStringObject, mockContext, mockResolveValue)).toThrow('Failed to parse object to JSON string');
+        expect(() => intrinsic.resolveValue(toJsonStringObject, mockContext, mockResolveValue)).toThrow(
+            'Failed to convert object to JSON string. Unsupported type: null',
+        );
         expect(mockResolveValue).toHaveBeenCalledWith(toJsonStringObject['Fn::ToJsonString'], mockContext);
     });
 
     it('should throw an error if the resolved object is undefined', () => {
         const toJsonStringObject = { 'Fn::ToJsonString': { Ref: 'UndefinedValue' } };
         mockResolveValue.mockReturnValue(undefined);
-        expect(() => intrinsic.resolveValue(toJsonStringObject, mockContext, mockResolveValue)).toThrow('Failed to parse object to JSON string');
+        expect(() => intrinsic.resolveValue(toJsonStringObject, mockContext, mockResolveValue)).toThrow(
+            'Failed to convert object to JSON string. Unsupported type: undefined',
+        );
         expect(mockResolveValue).toHaveBeenCalledWith(toJsonStringObject['Fn::ToJsonString'], mockContext);
     });
 
     it('should throw an error if the resolved object is a number', () => {
         const toJsonStringObject = { 'Fn::ToJsonString': { Ref: 'NumberValue' } };
         mockResolveValue.mockReturnValue(123);
-        expect(() => intrinsic.resolveValue(toJsonStringObject, mockContext, mockResolveValue)).toThrow('Failed to parse object to JSON string');
+        expect(() => intrinsic.resolveValue(toJsonStringObject, mockContext, mockResolveValue)).toThrow(
+            'Failed to convert object to JSON string. Unsupported type: number',
+        );
         expect(mockResolveValue).toHaveBeenCalledWith(toJsonStringObject['Fn::ToJsonString'], mockContext);
     });
 
     it('should throw an error if the resolved object is a boolean', () => {
         const toJsonStringObject = { 'Fn::ToJsonString': { Ref: 'BooleanValue' } };
         mockResolveValue.mockReturnValue(true);
-        expect(() => intrinsic.resolveValue(toJsonStringObject, mockContext, mockResolveValue)).toThrow('Failed to parse object to JSON string');
+        expect(() => intrinsic.resolveValue(toJsonStringObject, mockContext, mockResolveValue)).toThrow(
+            'Failed to convert object to JSON string. Unsupported type: boolean',
+        );
         expect(mockResolveValue).toHaveBeenCalledWith(toJsonStringObject['Fn::ToJsonString'], mockContext);
     });
 });

@@ -16,6 +16,7 @@ describe('FnSplitIntrinsic', () => {
             validateIntrinsic: jest.fn(),
             isIntrinsic: jest.fn(),
             getIntrinsicKey: jest.fn(),
+            deepEqual: jest.fn(),
         } as jest.Mocked<IntrinsicUtils>;
 
         mockStringUtils = {
@@ -44,10 +45,18 @@ describe('FnSplitIntrinsic', () => {
 
     it('should validate the intrinsic object', () => {
         const splitObject = { 'Fn::Split': [':', 'a:b:c'] };
-        mockResolveValue.mockReturnValueOnce('a:b:c');
+        mockResolveValue.mockReturnValueOnce(':').mockReturnValueOnce('a:b:c');
         mockStringUtils.splitString.mockReturnValueOnce(['a', 'b', 'c']);
 
         intrinsic.resolveValue(splitObject, mockContext, mockResolveValue);
+        expect(mockIntrinsicUtils.validateIntrinsic).toHaveBeenCalledWith(splitObject, CfIntrinsicFunctions.Fn_Split);
+    });
+
+    it('should throw an error if the Fn::Split delimiter is not a string', () => {
+        const splitObject = { 'Fn::Split': [1, 'a:b:c'] };
+        expect(() => intrinsic.resolveValue(splitObject, mockContext, mockResolveValue)).toThrow(
+            'Expected first argument in Fn::Split to resolve to a string',
+        );
         expect(mockIntrinsicUtils.validateIntrinsic).toHaveBeenCalledWith(splitObject, CfIntrinsicFunctions.Fn_Split);
     });
 
@@ -59,22 +68,24 @@ describe('FnSplitIntrinsic', () => {
 
     it('should throw an error if the Fn::Split array does not have exactly 2 elements', () => {
         const splitObjectShort = { 'Fn::Split': [':'] };
+        mockResolveValue.mockReturnValueOnce(':');
         expect(() => intrinsic.resolveValue(splitObjectShort, mockContext, mockResolveValue)).toThrow('Expected 2 items in Fn::Split array');
         expect(mockIntrinsicUtils.validateIntrinsic).toHaveBeenCalledWith(splitObjectShort, CfIntrinsicFunctions.Fn_Split);
 
         const splitObjectLong = { 'Fn::Split': [':', 'a', 'extra'] };
+        mockResolveValue.mockReturnValueOnce(':');
         expect(() => intrinsic.resolveValue(splitObjectLong, mockContext, mockResolveValue)).toThrow('Expected 2 items in Fn::Split array');
         expect(mockIntrinsicUtils.validateIntrinsic).toHaveBeenCalledWith(splitObjectLong, CfIntrinsicFunctions.Fn_Split);
     });
 
     it('should split a pre-resolved string with the given delimiter', () => {
         const splitObject = { 'Fn::Split': [':', 'a:b:c'] };
-        mockResolveValue.mockReturnValueOnce('a:b:c');
+        mockResolveValue.mockReturnValueOnce(':').mockReturnValueOnce('a:b:c');
         mockStringUtils.splitString.mockReturnValue(['a', 'b', 'c']);
 
         const result = intrinsic.resolveValue(splitObject, mockContext, mockResolveValue);
 
-        expect(mockResolveValue).toHaveBeenCalledTimes(1);
+        expect(mockResolveValue).toHaveBeenCalledTimes(2);
         expect(mockResolveValue).toHaveBeenCalledWith('a:b:c', mockContext);
         expect(mockStringUtils.splitString).toHaveBeenCalledWith('a:b:c', ':');
         expect(result).toEqual(['a', 'b', 'c']);
@@ -82,12 +93,12 @@ describe('FnSplitIntrinsic', () => {
 
     it('should split a string resolved via ValueResolverFunc', () => {
         const splitObject = { 'Fn::Split': [':', { Ref: 'SomeString' }] };
-        mockResolveValue.mockReturnValue('resolved:string');
+        mockResolveValue.mockReturnValueOnce(':').mockReturnValue('resolved:string');
         mockStringUtils.splitString.mockReturnValue(['resolved', 'string']);
 
         const result = intrinsic.resolveValue(splitObject, mockContext, mockResolveValue);
 
-        expect(mockResolveValue).toHaveBeenCalledTimes(1);
+        expect(mockResolveValue).toHaveBeenCalledTimes(2);
         expect(mockResolveValue).toHaveBeenCalledWith({ Ref: 'SomeString' }, mockContext);
         expect(mockStringUtils.splitString).toHaveBeenCalledWith('resolved:string', ':');
         expect(result).toEqual(['resolved', 'string']);
@@ -95,12 +106,12 @@ describe('FnSplitIntrinsic', () => {
 
     it('should throw an error if the resolved source string is not a string', () => {
         const splitObject = { 'Fn::Split': [':', { Ref: 'SomeNonString' }] };
-        mockResolveValue.mockReturnValue(123);
+        mockResolveValue.mockReturnValueOnce(':').mockReturnValue(123);
 
         expect(() => intrinsic.resolveValue(splitObject, mockContext, mockResolveValue)).toThrow(
             'Expected second argument in Fn::Split to resolve to a string',
         );
-        expect(mockResolveValue).toHaveBeenCalledTimes(1);
+        expect(mockResolveValue).toHaveBeenCalledTimes(2);
         expect(mockResolveValue).toHaveBeenCalledWith({ Ref: 'SomeNonString' }, mockContext);
         expect(mockStringUtils.splitString).not.toHaveBeenCalled();
     });
@@ -108,11 +119,11 @@ describe('FnSplitIntrinsic', () => {
     it('should handle an empty delimiter', () => {
         const splitObject = { 'Fn::Split': ['', 'abc'] };
         mockStringUtils.splitString.mockReturnValue(['a', 'b', 'c']);
-        mockResolveValue.mockReturnValue('abc');
+        mockResolveValue.mockReturnValueOnce('').mockReturnValue('abc');
 
         const result = intrinsic.resolveValue(splitObject, mockContext, mockResolveValue);
 
-        expect(mockResolveValue).toHaveBeenCalledTimes(1);
+        expect(mockResolveValue).toHaveBeenCalledTimes(2);
         expect(mockResolveValue).toHaveBeenCalledWith('abc', mockContext);
         expect(mockStringUtils.splitString).toHaveBeenCalledWith('abc', '');
         expect(result).toEqual(['a', 'b', 'c']);
@@ -121,11 +132,11 @@ describe('FnSplitIntrinsic', () => {
     it('should handle an empty source string', () => {
         const splitObject = { 'Fn::Split': [':', ''] };
         mockStringUtils.splitString.mockReturnValue(['']);
-        mockResolveValue.mockReturnValue('');
+        mockResolveValue.mockReturnValueOnce(':').mockReturnValue('');
 
         const result = intrinsic.resolveValue(splitObject, mockContext, mockResolveValue);
 
-        expect(mockResolveValue).toHaveBeenCalledTimes(1);
+        expect(mockResolveValue).toHaveBeenCalledTimes(2);
         expect(mockResolveValue).toHaveBeenCalledWith('', mockContext);
         expect(mockStringUtils.splitString).toHaveBeenCalledWith('', ':');
         expect(result).toEqual(['']);
@@ -134,11 +145,11 @@ describe('FnSplitIntrinsic', () => {
     it('should handle a delimiter that is not found in the source string', () => {
         const splitObject = { 'Fn::Split': [',', 'abc'] };
         mockStringUtils.splitString.mockReturnValue(['abc']);
-        mockResolveValue.mockReturnValue('abc');
+        mockResolveValue.mockReturnValueOnce(',').mockReturnValue('abc');
 
         const result = intrinsic.resolveValue(splitObject, mockContext, mockResolveValue);
 
-        expect(mockResolveValue).toHaveBeenCalledTimes(1);
+        expect(mockResolveValue).toHaveBeenCalledTimes(2);
         expect(mockResolveValue).toHaveBeenCalledWith('abc', mockContext);
         expect(mockStringUtils.splitString).toHaveBeenCalledWith('abc', ',');
         expect(result).toEqual(['abc']);

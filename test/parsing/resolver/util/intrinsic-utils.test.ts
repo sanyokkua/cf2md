@@ -73,4 +73,62 @@ describe('IntrinsicUtilsImpl', () => {
             expect(() => intrinsicUtils.validateIntrinsic(obj, CfIntrinsicFunctions.Fn_ToJsonString)).not.toThrow();
         });
     });
+
+    describe('deepEqual method', () => {
+        it('should return true for deeply equal arrays', () => {
+            expect(intrinsicUtils.deepEqual([1, 2], [1, 2])).toBe(true);
+        });
+
+        it('should return false for arrays of different lengths', () => {
+            expect(intrinsicUtils.deepEqual([1, 2], [1])).toBe(false);
+        });
+
+        it('should return true for deeply equal nested arrays', () => {
+            expect(intrinsicUtils.deepEqual([1, [2, 3]], [1, [2, 3]])).toBe(true);
+        });
+
+        it('should return false for deeply not equal nested arrays', () => {
+            expect(intrinsicUtils.deepEqual([1, [2, 3]], [1, [2, 4]])).toBe(false);
+        });
+
+        it('should return true for deeply equal Dates', () => {
+            const date1 = new Date('2023-01-01T00:00:00.000Z');
+            const date2 = new Date('2023-01-01T00:00:00.000Z');
+            expect(intrinsicUtils.deepEqual(date1, date2)).toBe(true);
+        });
+
+        it('should return false for deeply not equal Dates', () => {
+            const date1 = new Date('2023-01-01T00:00:00.000Z');
+            const date2 = new Date('2023-01-02T00:00:00.000Z');
+            expect(intrinsicUtils.deepEqual(date1, date2)).toBe(false);
+        });
+
+        it('should return true for deeply equal RegExps', () => {
+            const regex1 = /abc/g;
+            const regex2 = /abc/g;
+            expect(intrinsicUtils.deepEqual(regex1, regex2)).toBe(true);
+        });
+
+        it('should return false for deeply not equal RegExps', () => {
+            const regex1 = /abc/g;
+            const regex2 = /abd/g;
+            expect(intrinsicUtils.deepEqual(regex1, regex2)).toBe(false);
+        });
+
+        it('should return false for two nulls', () => {
+            expect(intrinsicUtils.deepEqual(null, null)).toBe(false);
+        });
+
+        it('should return false for two different types', () => {
+            expect(intrinsicUtils.deepEqual(1, '1')).toBe(false);
+        });
+
+        it('should return false for two different objects', () => {
+            expect(intrinsicUtils.deepEqual({ a: 1, b: 2 }, { a: 1, b: 2, c: 3 })).toBe(false);
+        });
+
+        it('should return true for equal objects', () => {
+            expect(intrinsicUtils.deepEqual({ a: 1, b: 2, c: 3 }, { a: 1, b: 2, c: 3 })).toBe(true);
+        });
+    });
 });

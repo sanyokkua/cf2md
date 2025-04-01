@@ -6,9 +6,9 @@ export class AwsApiGatewayAccountResource extends BaseResource {
         const { ctx, resource } = context;
         if (!resource._arn) {
             const region = ctx.getRegion();
-            const accountId = ctx.getAccountId();
             const partition = ctx.getPartition();
-            resource._arn = `arn:${partition}:apigateway:${region}::${accountId}`;
+            const accId = this.idGenFunc(context);
+            resource._arn = `arn:${partition}:apigateway:${region}::/${accId}`;
         }
         return resource._arn;
     }
