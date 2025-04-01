@@ -1,1 +1,1 @@
-export { AwsCfTemplateModel, CfModelParser, ParsingResult, TemplateParam, UserProvidedParam } from './parsing';
+export { AwsCfTemplateModel, ParserService, ParserServiceInstanceProvider, ParsingResult, TemplateParam, UserProvidedParam } from './parsing';

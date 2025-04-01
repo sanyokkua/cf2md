@@ -1,4 +1,5 @@
 import log from 'loglevel';
+import { ParsingValidationError } from '../error/parsing-errors';
 import { Intrinsic, IntrinsicResolver } from '../types/intrinsic-types';
 import { ResolvingContext, ValueResolver } from '../types/resolving-types';
 import { IntrinsicUtils } from '../types/util-service-types';
@@ -51,7 +52,7 @@ export class ValueResolverImpl implements ValueResolver {
         if (!intrinsicKey) {
             const errorMsg = 'Intrinsic key missing';
             log.error(`[ValueResolverImpl.resolveIntrinsicObject] Error: ${errorMsg} at path: ${ctx.getCurrentPath()}`, value);
-            throw new Error(errorMsg);
+            throw new ParsingValidationError(errorMsg);
         }
         log.debug(`[ValueResolverImpl.resolveIntrinsicObject] Found intrinsic "${intrinsicKey}" at path: ${ctx.getCurrentPath()}`);
 

@@ -2,6 +2,7 @@ import { extractErrorDetails } from 'coreutilsts';
 import log from 'loglevel';
 import typia from 'typia';
 import { StringUtils } from '../../common';
+import { ParsingValidationError } from '../error/parsing-errors';
 import { ResolvingContextImpl } from '../resolver/resolving-context';
 import { CloudFormationResource, CloudFormationTemplate } from '../types/cloudformation-model';
 import { ResourceIntrinsicResolver } from '../types/intrinsic-types';
@@ -100,7 +101,7 @@ export class CfModelParserImpl implements ParserService {
         if (parseResult.hasErrors || !parseResult.parsedTemplate || !parseResult.paramsToReview) {
             const errorMsg = 'Parsing result is invalid: the template contains errors or is missing required data.';
             log.error('[CfModelParserImpl.validateAndGetParsingResult] Error:', errorMsg);
-            throw new Error(errorMsg);
+            throw new ParsingValidationError(errorMsg);
         }
         const result: [CloudFormationTemplate, TemplateParam[]] = [parseResult.parsedTemplate, parseResult.paramsToReview];
         log.trace('[CfModelParserImpl.validateAndGetParsingResult] Exiting with result:', result);

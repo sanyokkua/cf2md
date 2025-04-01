@@ -1,18 +1,7 @@
 import log from 'loglevel';
-import { StringUtils, StringUtilsImpl } from '../../src/common';
-import { ParserUtilsImpl } from '../../src/parsing/param/param-utils';
-import { CfModelParserImpl } from '../../src/parsing/parser/cf-model-parser';
-import { RandomUtilsImpl } from '../../src/parsing/random/random-utils';
-import { IntrinsicResolverImpl } from '../../src/parsing/resolver/intrinsic-resolver';
-import { ResourceIntrinsicResolverImpl } from '../../src/parsing/resolver/intrinsic-resource-resolver';
-import { IntrinsicUtilsImpl } from '../../src/parsing/resolver/util/intrinsic-utils';
-import { ResourceUtilsImpl } from '../../src/parsing/resolver/util/resource-utils';
-import { ValueResolverImpl } from '../../src/parsing/resolver/value-resolver';
-import { IntrinsicResolver, ResourceIntrinsicResolver } from '../../src/parsing/types/intrinsic-types';
-import { ParserService, ParsingResult } from '../../src/parsing/types/parsing-types';
-import { ValueResolver } from '../../src/parsing/types/resolving-types';
-import { IntrinsicUtils, ParserUtils, RandomUtils, ResourceUtils } from '../../src/parsing/types/util-service-types';
+import { ParserService, ParsingResult } from '../../src';
 
+import { ParserServiceInstanceProvider } from '../../src';
 import * as dynamodbTemplate from '../testdata/dynamodb-lambda.json';
 import * as ecsServiceTemplate from '../testdata/ecs-service.json';
 import * as gatewayTemplate from '../testdata/gateway-lambda-eventbus-rules-sns.json';
@@ -93,26 +82,10 @@ const templateCases: TemplateCase[] = [
 ];
 
 describe('Parsing Module Integration Tests', () => {
-    let stringUtils: StringUtils;
-    let randomUtils: RandomUtils;
-    let intrinsicUtils: IntrinsicUtils;
-    let resourceUtils: ResourceUtils;
-    let resourceIntrinsicResolver: ResourceIntrinsicResolver;
-    let intrinsicResolver: IntrinsicResolver;
-    let valueResolver: ValueResolver;
-    let parserUtils: ParserUtils;
     let parser: ParserService;
 
     beforeEach(() => {
-        stringUtils = new StringUtilsImpl();
-        randomUtils = new RandomUtilsImpl();
-        intrinsicUtils = new IntrinsicUtilsImpl();
-        resourceUtils = new ResourceUtilsImpl(stringUtils, randomUtils);
-        resourceIntrinsicResolver = new ResourceIntrinsicResolverImpl(resourceUtils);
-        intrinsicResolver = new IntrinsicResolverImpl(intrinsicUtils, resourceIntrinsicResolver, stringUtils);
-        valueResolver = new ValueResolverImpl(intrinsicUtils, intrinsicResolver);
-        parserUtils = new ParserUtilsImpl(randomUtils);
-        parser = new CfModelParserImpl(stringUtils, parserUtils, valueResolver, resourceUtils, resourceIntrinsicResolver);
+        parser = ParserServiceInstanceProvider.createParserService();
     });
 
     describe.each(templateCases)('%s Template Evaluator', (templateCase) => {

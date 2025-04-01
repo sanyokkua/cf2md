@@ -1,5 +1,6 @@
 import log from 'loglevel';
 import { CfIntrinsicFunctions } from '../../enums/cf-enums';
+import { ParsingValidationError } from '../../error/parsing-errors';
 import { IntrinsicUtils } from '../../types/util-service-types';
 
 export class IntrinsicUtilsImpl implements IntrinsicUtils {
@@ -54,13 +55,13 @@ export class IntrinsicUtilsImpl implements IntrinsicUtils {
         log.debug('[IntrinsicUtilsImpl.validateIntrinsic] Checking if objectNode is an intrinsic');
         if (!this.isIntrinsic(objectNode)) {
             log.warn('[IntrinsicUtilsImpl.validateIntrinsic] Passed objectNode has invalid intrinsic type');
-            throw new Error('Passed objectNode is not an intrinsic object');
+            throw new ParsingValidationError('Passed objectNode is not an intrinsic object');
         }
 
         log.debug(`[IntrinsicUtilsImpl.validateIntrinsic] Checking if object includes expected intrinsic key "${intrinsicKey}"`);
         if (!Object.keys(objectNode).includes(intrinsicKey)) {
             log.warn(`[IntrinsicUtilsImpl.validateIntrinsic] Object does not include expected intrinsic key "${intrinsicKey}"`);
-            throw new Error(`Intrinsic key "${intrinsicKey}" is not found in the object`);
+            throw new ParsingValidationError(`Intrinsic key "${intrinsicKey}" is not found in the object`);
         }
         log.trace('[IntrinsicUtilsImpl.validateIntrinsic] Exiting');
     }

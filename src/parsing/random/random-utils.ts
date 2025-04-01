@@ -1,5 +1,6 @@
 import log from 'loglevel';
 import { v4 as uuidv4 } from 'uuid';
+import { ParsingValidationError } from '../error/parsing-errors';
 import { RandomUtils } from '../types/util-service-types';
 
 export class RandomUtilsImpl implements RandomUtils {
@@ -8,7 +9,7 @@ export class RandomUtilsImpl implements RandomUtils {
         if (maxValue < minValue) {
             const errorMessage = `${maxName} must be greater than or equal to ${minName}`;
             log.error('[RandomUtilsImpl.validateRange] Validation error:', errorMessage);
-            throw new Error(errorMessage);
+            throw new ParsingValidationError(errorMessage);
         }
         log.trace('[RandomUtilsImpl.validateRange] Exiting');
     }

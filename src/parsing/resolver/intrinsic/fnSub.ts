@@ -1,5 +1,6 @@
 import log from 'loglevel';
 import { CfIntrinsicFunctions } from '../../enums/cf-enums';
+import { ParsingValidationError } from '../../error/parsing-errors';
 import { FnSub } from '../../types/cloudformation-model';
 import { Intrinsic } from '../../types/intrinsic-types';
 import { ResolvingContext, ValueResolverFunc } from '../../types/resolving-types';
@@ -132,6 +133,6 @@ export class FnSubIntrinsic implements Intrinsic {
 
     private throwError(message: string, context?: unknown): never {
         log.warn(`[FnSubIntrinsic.throwError] ${message}`, context);
-        throw new Error(`Fn::Sub - ${message}`);
+        throw new ParsingValidationError(`Fn::Sub - ${message}`);
     }
 }

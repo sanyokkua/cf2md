@@ -1,5 +1,6 @@
 import log from 'loglevel';
 import { PseudoParam } from '../enums/cf-enums';
+import { ParsingValidationError } from '../error/parsing-errors';
 import { CloudFormationTemplate } from '../types/cloudformation-model';
 import { TemplateParam, UserProvidedParam } from '../types/parsing-types';
 import { MergeStatistics, ParserUtils, RandomUtils, ResultParamMap } from '../types/util-service-types';
@@ -184,7 +185,7 @@ export class ParserUtilsImpl implements ParserUtils {
 
         if (missingParams.length > 0) {
             log.error(`[ParserUtilsImpl.validateParamsList] Missing required parameters: ${missingParams.join(', ')}`);
-            throw new Error(`Missing required parameters: ${missingParams.join(', ')}`);
+            throw new ParsingValidationError(`Missing required parameters: ${missingParams.join(', ')}`);
         }
         log.trace('[ParserUtilsImpl.validateParamsList] Exiting');
     }

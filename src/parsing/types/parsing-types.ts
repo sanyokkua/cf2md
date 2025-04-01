@@ -25,3 +25,7 @@ export interface ParserService {
 
     resolveValuesInTemplate(parseResult: ParsingResult, userParameters: UserProvidedParam[]): CloudFormationTemplate;
 }
+
+export interface ParserServiceInstanceProvider {
+    createParserService(): ParserService;
+}

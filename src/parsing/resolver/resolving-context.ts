@@ -1,6 +1,7 @@
 import log from 'loglevel';
 import { StringKeyObject } from '../../common';
 import { PseudoParam } from '../enums/cf-enums';
+import { ParsingValidationError } from '../error/parsing-errors';
 import { CloudFormationTemplate } from '../types/cloudformation-model';
 import { ResolvingContext } from '../types/resolving-types';
 import { ParserUtils, ResourceUtils, ResultParamMap } from '../types/util-service-types';
@@ -85,14 +86,14 @@ export class ResolvingContextImpl implements ResolvingContext {
         }
 
         log.error(`[ResolvingContextImpl.getParameter] Parameter "${name}" is not supported or does not exist.`);
-        throw new Error(name);
+        throw new ParsingValidationError(name);
     }
 
     addParameter(name: string, value: unknown): void {
         log.trace('[ResolvingContextImpl.addParameter] Entering with arguments:', { name, value });
         if (this.hasParameterName(name)) {
             log.error(`[ResolvingContextImpl.addParameter] Cannot add parameter "${name}": parameter name already exists.`);
-            throw new Error(name);
+            throw new ParsingValidationError(name);
         }
         this.lookupMapDynamic[name] = value;
         log.debug(`[ResolvingContextImpl.addParameter] Added parameter "${name}" with value:`, value);
