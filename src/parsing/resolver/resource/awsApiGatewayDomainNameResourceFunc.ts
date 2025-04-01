@@ -1,3 +1,4 @@
+import { ApiGatewayDomainNameResource } from '../../types/cloudformation-model';
 import { IntrinsicContext } from '../../types/intrinsic-types';
 import { BaseResource } from './BaseResourceImpl';
 
@@ -33,13 +34,20 @@ export class AwsApiGatewayDomainNameResource extends BaseResource {
     }
 
     arnGenFunc(context: IntrinsicContext): string {
-        const { ctx, resource } = context;
+        const { ctx, logicalId, resource, valueResolver } = context;
         if (!resource._arn) {
             const region = ctx.getRegion();
-            const accountId = ctx.getAccountId();
             const partition = ctx.getPartition();
-            const resId = this.idGenFunc(context);
-            resource._arn = `arn:${partition}:apigateway:${region}:${accountId}:${resId}`;
+            const typedRes = resource as ApiGatewayDomainNameResource;
+            const domName = this.resourceUtils.generateNameId(
+                typedRes.Properties.DomainName,
+                `${logicalId}.Properties.DomainName`,
+                'domain',
+                ctx,
+                valueResolver,
+                4,
+            );
+            resource._arn = `arn:${partition}:apigateway:${region}::/domainnames/${domName}`;
         }
         return resource._arn;
     }

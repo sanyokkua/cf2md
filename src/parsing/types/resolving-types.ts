@@ -1,4 +1,4 @@
-import { StringKeyObject } from '../../common/types/common-types';
+import { StringKeyObject } from '../../common';
 import { CloudFormationTemplate } from './cloudformation-model';
 
 export interface ResolvingContext {

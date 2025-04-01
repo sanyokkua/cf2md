@@ -73,6 +73,7 @@ import {
     ApiGatewayDocumentationPartResource,
     ApiGatewayDocumentationVersionResource,
     ApiGatewayDomainNameAccessAssociationResource,
+    ApiGatewayDomainNameResource,
     ApiGatewayGatewayResponseResource,
     ApiGatewayMethodResource,
     ApiGatewayModelResource,
@@ -275,7 +276,22 @@ describe('ResourceIntrinsic Implementations', () => {
             description: 'AwsApiGatewayDomainNameResource',
             getInstance: (utils) => new AwsApiGatewayDomainNameResource(utils),
             idGen: 'abcdef',
-            arnGen: 'arn:aws:apigateway:us-east-1:123456789012:abcdef',
+            arnGen: 'arn:aws:apigateway:us-east-1::/domainnames/TestDomain',
+            refFunc: 'abcdef',
+            getAttFunc: {
+                'DistributionDomainName': 'd111111abcdef8.cloudfront.net',
+                'DistributionHostedZoneId': 'Z2FDTNDATAQYW2',
+                'RegionalDomainName': 'RegionalDomainName',
+                'RegionalHostedZoneId': 'RegionalHostedZoneId',
+                '': 'abcdef',
+            },
+            resource: { Properties: { DomainName: 'TestDomain' } } as ApiGatewayDomainNameResource,
+        },
+        {
+            description: 'AwsApiGatewayDomainNameResource without domain name',
+            getInstance: (utils) => new AwsApiGatewayDomainNameResource(utils),
+            idGen: 'abcdef',
+            arnGen: 'arn:aws:apigateway:us-east-1::/domainnames/domain',
             refFunc: 'abcdef',
             getAttFunc: {
                 'DistributionDomainName': 'd111111abcdef8.cloudfront.net',
@@ -289,7 +305,7 @@ describe('ResourceIntrinsic Implementations', () => {
             description: 'AwsApiGatewayGatewayResponseResource',
             getInstance: (utils) => new AwsApiGatewayGatewayResponseResource(utils),
             idGen: 'abcdef',
-            arnGen: 'arn:aws:apigateway:us-east-1:123456789012:abcdef',
+            arnGen: 'arn:aws:apigateway:us-east-1::/restapis/TestRestApiId/gatewayresponses/ResponseType',
             refFunc: 'abcdef',
             getAttFunc: {
                 'ResponseType': 'ResponseType',
@@ -297,6 +313,7 @@ describe('ResourceIntrinsic Implementations', () => {
             },
             resource: {
                 Properties: {
+                    RestApiId: 'TestRestApiId',
                     ResponseType: 'ResponseType',
                 },
             } as ApiGatewayGatewayResponseResource,

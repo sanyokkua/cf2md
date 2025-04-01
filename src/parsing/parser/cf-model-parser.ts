@@ -24,6 +24,7 @@ export class CfModelParserImpl implements ParserService {
         try {
             if (!this.stringUtils.isValidNotBlankString(template)) {
                 log.warn('Template validation failed: Invalid template string provided');
+                // noinspection ExceptionCaughtLocallyJS
                 throw new Error('Invalid template string');
             }
 

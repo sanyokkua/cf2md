@@ -3,7 +3,7 @@ import { IntrinsicContext } from '../../types/intrinsic-types';
 import { BaseResource } from './BaseResourceImpl';
 
 export class AwsApiGatewayGatewayResponseResource extends BaseResource {
-    getAttFunc(context: IntrinsicContext, key: string): unknown {
+    getAttFunc(context: IntrinsicContext, key: string): string {
         const { ctx, logicalId, resource, valueResolver } = context;
         if (key === 'ResponseType') {
             const typedResource = resource as ApiGatewayGatewayResponseResource;
@@ -19,13 +19,14 @@ export class AwsApiGatewayGatewayResponseResource extends BaseResource {
     }
 
     arnGenFunc(context: IntrinsicContext): string {
-        const { ctx, resource } = context;
+        const { ctx, logicalId, resource, valueResolver } = context;
         if (!resource._arn) {
             const region = ctx.getRegion();
-            const accountId = ctx.getAccountId();
             const partition = ctx.getPartition();
-            const resId = this.idGenFunc(context);
-            resource._arn = `arn:${partition}:apigateway:${region}:${accountId}:${resId}`;
+            const resType = this.getAttFunc(context, 'ResponseType');
+            const resTyped = resource as ApiGatewayGatewayResponseResource;
+            const apiId = this.resourceUtils.resolveString(resTyped.Properties.RestApiId, `${logicalId}.Properties.RestApiId`, ctx, valueResolver);
+            resource._arn = `arn:${partition}:apigateway:${region}::/restapis/${apiId}/gatewayresponses/${resType}`;
         }
         return resource._arn;
     }
