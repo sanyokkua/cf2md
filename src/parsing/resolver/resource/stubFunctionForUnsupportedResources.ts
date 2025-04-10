@@ -3,7 +3,7 @@ import { IntrinsicContext } from '../../types/intrinsic-types';
 import { BaseResource } from './BaseResourceImpl';
 
 export class StubFunctionForUnsupported extends BaseResource {
-    arnGenFunc(context: IntrinsicContext): string {
+    override arnGenFunc(context: IntrinsicContext): string {
         const { ctx, resource } = context;
         if (!resource._arn) {
             const serviceNameWithoutPrefix = removePrefixIfPresent(resource.Type, 'AWS::');

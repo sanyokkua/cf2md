@@ -415,7 +415,6 @@ describe('ResourceIntrinsic Implementations', () => {
             refFunc: 'StageName',
             getAttFunc: {
                 '': 'StageName',
-                'RootResourceId': 'STUB_RootResourceId',
             },
             resource: {
                 Properties: {
@@ -432,7 +431,6 @@ describe('ResourceIntrinsic Implementations', () => {
             refFunc: 'stage',
             getAttFunc: {
                 '': 'stage',
-                'RootResourceId': 'STUB_RootResourceId',
             },
             resource: {
                 Properties: {

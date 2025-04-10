@@ -142,11 +142,11 @@ export class CfModelParserImpl implements ParserService {
         const identifierContext = { resource, logicalId, ctx: context, valueResolver: resolverFunction };
         log.debug('[CfModelParserImpl.assignResourceIdentifiers] Created identifier context:', identifierContext);
 
-        if (!resource._id) {
+        if (resource._id === undefined) {
             resource._id = resolver.idGenFunc(identifierContext);
             log.debug(`[CfModelParserImpl.assignResourceIdentifiers] Assigned _id: ${resource._id} to resource: ${logicalId}`);
         }
-        if (!resource._arn) {
+        if (resource._arn === undefined) {
             resource._arn = resolver.arnGenFunc(identifierContext);
             log.debug(`[CfModelParserImpl.assignResourceIdentifiers] Assigned _arn: ${resource._arn} to resource: ${logicalId}`);
         }

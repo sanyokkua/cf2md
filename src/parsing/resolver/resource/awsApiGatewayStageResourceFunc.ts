@@ -3,15 +3,7 @@ import { IntrinsicContext } from '../../types/intrinsic-types';
 import { BaseResource } from './BaseResourceImpl';
 
 export class AwsApiGatewayStageResource extends BaseResource {
-    getAttFunc(context: IntrinsicContext, key: string): unknown {
-        if (key === 'RootResourceId') {
-            return 'STUB_RootResourceId';
-        }
-
-        return this.idGenFunc(context);
-    }
-
-    arnGenFunc(context: IntrinsicContext): string {
+    override arnGenFunc(context: IntrinsicContext): string {
         const { ctx, logicalId, resource, valueResolver } = context;
         if (!resource._arn) {
             const resTyped = resource as ApiGatewayStageResource;
@@ -29,7 +21,7 @@ export class AwsApiGatewayStageResource extends BaseResource {
         return resource._arn;
     }
 
-    idGenFunc(context: IntrinsicContext): string {
+    override idGenFunc(context: IntrinsicContext): string {
         const { ctx, logicalId, resource, valueResolver } = context;
         if (!resource._id) {
             const resTyped = resource as ApiGatewayStageResource;

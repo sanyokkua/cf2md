@@ -2,7 +2,7 @@ import { IntrinsicContext } from '../../types/intrinsic-types';
 import { BaseResource } from './BaseResourceImpl';
 
 export class AwsApiGatewayDocumentationPartResource extends BaseResource {
-    arnGenFunc(context: IntrinsicContext): string {
+    override arnGenFunc(context: IntrinsicContext): string {
         const { ctx, logicalId, resource, valueResolver } = context;
         if (!resource._arn) {
             const partition = ctx.getPartition();
@@ -21,7 +21,7 @@ export class AwsApiGatewayDocumentationPartResource extends BaseResource {
         return resource._arn;
     }
 
-    idGenFunc(context: IntrinsicContext): string {
+    override idGenFunc(context: IntrinsicContext): string {
         const { ctx, resource } = context;
         if (!resource._id) {
             resource._id = this.resourceUtils.generatePrefixedId('docpart', 6, ctx);

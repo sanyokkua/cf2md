@@ -7,4 +7,5 @@ export interface StringUtils {
     replaceTemplateVariables(template: string, values: Record<string, unknown>): string;
     joinStrings(strings: string[], joinSymbol?: LineSeparator): string;
     splitString(value: string, separator?: LineSeparator): string[];
+    renderVelocityJsonString(value: string, stageVariables?: Record<string, string>): string;
 }

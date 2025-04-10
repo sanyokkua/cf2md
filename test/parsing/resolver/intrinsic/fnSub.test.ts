@@ -1,5 +1,6 @@
 import { CfIntrinsicFunctions } from '../../../../src/parsing';
 import { FnSubIntrinsic } from '../../../../src/parsing/resolver/intrinsic';
+import { ResourceIntrinsicResolver } from '../../../../src/parsing/types/intrinsic-types';
 import { ResolvingContext } from '../../../../src/parsing/types/resolving-types';
 import { IntrinsicUtils } from '../../../../src/parsing/types/util-service-types';
 
@@ -7,6 +8,7 @@ describe('FnSubIntrinsic', () => {
     let intrinsic: FnSubIntrinsic;
     let mockIntrinsicUtils: jest.Mocked<IntrinsicUtils>;
     let mockContext: jest.Mocked<ResolvingContext>;
+    let mockResourceIntrinsicResolver: jest.Mocked<ResourceIntrinsicResolver>;
     let mockResolveValue: jest.Mock<any, any>;
 
     beforeEach(() => {
@@ -22,12 +24,18 @@ describe('FnSubIntrinsic', () => {
             getParameter: jest.fn(),
             addParameter: jest.fn(),
             resolveValue: jest.fn(),
-            originalTemplate: {},
+            originalTemplate: {
+                Resources: {},
+            },
         } as unknown as jest.Mocked<ResolvingContext>;
+
+        mockResourceIntrinsicResolver = {
+            getResourceIntrinsic: jest.fn(),
+        };
 
         mockResolveValue = jest.fn();
 
-        intrinsic = new FnSubIntrinsic(mockIntrinsicUtils);
+        intrinsic = new FnSubIntrinsic(mockIntrinsicUtils, mockResourceIntrinsicResolver);
 
         jest.clearAllMocks();
     });
@@ -175,6 +183,118 @@ describe('FnSubIntrinsic', () => {
             expect(() => intrinsic.resolveValue(subObject, mockContext, mockResolveValue)).toThrow(
                 'Fn::Sub must be either a string or an array of two elements',
             );
+        });
+    });
+
+    describe('when the template string contains resource references', () => {
+        it('should resolve a variable in the format "LogicalID.PropertyName" using getAttFunc', () => {
+            mockContext = {
+                hasParameterName: jest.fn(),
+                getParameter: jest.fn(),
+                addParameter: jest.fn(),
+                resolveValue: jest.fn(),
+                originalTemplate: {
+                    Resources: {
+                        MyResource: { Type: 'AWS::S3::Bucket', Properties: {} },
+                    },
+                },
+            } as unknown as jest.Mocked<ResolvingContext>;
+
+            // Mock getResourceIntrinsic to return an object with getAttFunc
+            const mockGetAttFunc = jest.fn().mockReturnValue('BucketNameValue');
+            mockResourceIntrinsicResolver.getResourceIntrinsic.mockReturnValue({
+                getAttFunc: mockGetAttFunc,
+                refFunc: jest.fn(),
+                arnGenFunc: jest.fn(),
+                idGenFunc: jest.fn(),
+            });
+
+            const subObject = { 'Fn::Sub': 'Bucket: ${MyResource.BucketName}' };
+            const result = intrinsic.resolveValue(subObject, mockContext, mockResolveValue);
+
+            expect(result).toBe('Bucket: BucketNameValue');
+            expect(mockGetAttFunc).toHaveBeenCalled();
+            // Optionally, verify the context passed to getAttFunc
+            const calledContext = mockGetAttFunc.mock.calls[0][0];
+            expect(calledContext.logicalId).toBe('MyResource');
+        });
+
+        it('should resolve a variable that is a resource reference using refFunc', () => {
+            mockContext = {
+                hasParameterName: jest.fn(),
+                getParameter: jest.fn(),
+                addParameter: jest.fn(),
+                resolveValue: jest.fn(),
+                originalTemplate: {
+                    Resources: {
+                        MyResource: { Type: 'AWS::Lambda::Function', Properties: {} },
+                    },
+                },
+            } as unknown as jest.Mocked<ResolvingContext>;
+            const mockRefFunc = jest.fn().mockReturnValue('LambdaFunctionRef');
+            mockResourceIntrinsicResolver.getResourceIntrinsic.mockReturnValue({
+                getAttFunc: jest.fn(),
+                refFunc: mockRefFunc,
+                arnGenFunc: jest.fn(),
+                idGenFunc: jest.fn(),
+            });
+
+            const subObject = { 'Fn::Sub': 'Function: ${MyResource}' };
+            const result = intrinsic.resolveValue(subObject, mockContext, mockResolveValue);
+
+            expect(result).toBe('Function: LambdaFunctionRef');
+            expect(mockRefFunc).toHaveBeenCalled();
+            const calledContext = mockRefFunc.mock.calls[0][0];
+            expect(calledContext.logicalId).toBe('MyResource');
+        });
+
+        it('should throw an error if a resource reference variable is not found in originalTemplate.Resources', () => {
+            mockContext = {
+                hasParameterName: jest.fn(),
+                getParameter: jest.fn(),
+                addParameter: jest.fn(),
+                resolveValue: jest.fn(),
+                originalTemplate: {
+                    Resources: {
+                        SomeOtherResource: { Type: 'AWS::EC2::Instance', Properties: {} },
+                    },
+                },
+            } as unknown as jest.Mocked<ResolvingContext>;
+            const subObject = { 'Fn::Sub': 'Instance: ${MyResource.InstanceId}' };
+
+            expect(() => intrinsic.resolveValue(subObject, mockContext, mockResolveValue)).toThrow(
+                'Fn::Sub - Expected variable "MyResource.InstanceId" [MyResource, InstanceId] is not found in cache',
+            );
+        });
+    });
+
+    describe('when the template string contains both context parameters and resource references', () => {
+        it('should resolve a template with context parameters and resource references correctly', () => {
+            mockContext = {
+                hasParameterName: jest.fn(),
+                getParameter: jest.fn(),
+                addParameter: jest.fn(),
+                originalTemplate: {
+                    Resources: {
+                        MyResource: { Type: 'AWS::S3::Bucket', Properties: {} },
+                    },
+                },
+            } as unknown as jest.Mocked<ResolvingContext>;
+            mockContext.hasParameterName.mockImplementation((key) => key === 'Greeting');
+            mockContext.getParameter.mockImplementation((key) => (key === 'Greeting' ? 'Hello' : null));
+            const mockGetAttFunc = jest.fn().mockReturnValue('BucketNameValue');
+            mockResourceIntrinsicResolver.getResourceIntrinsic.mockReturnValue({
+                getAttFunc: mockGetAttFunc,
+                refFunc: jest.fn(),
+                arnGenFunc: jest.fn(),
+                idGenFunc: jest.fn(),
+            });
+
+            const subObject = { 'Fn::Sub': '${Greeting} from ${MyResource.BucketName}' };
+            const result = intrinsic.resolveValue(subObject, mockContext, mockResolveValue);
+
+            expect(result).toBe('Hello from BucketNameValue');
+            expect(mockContext.hasParameterName).toHaveBeenCalledWith('Greeting');
         });
     });
 });

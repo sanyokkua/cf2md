@@ -568,7 +568,7 @@ export interface LambdaFunctionResource extends CommonResource {
         DeadLetterConfig?: LambdaFunctionResourceDlq;
         Environment?: LambdaFunctionResourceEnv;
         EphemeralStorage?: LambdaFunctionEphemeralStorage;
-        FileSystemConfigs?: LambdaFunctionFileSystemConfig[]; // Changed: this must be an array
+        FileSystemConfigs?: LambdaFunctionFileSystemConfig[];
         FunctionName?: StringType;
         Handler?: StringType;
         ImageConfig?: LambdaFunctionImageConfig;
@@ -577,7 +577,7 @@ export interface LambdaFunctionResource extends CommonResource {
         LoggingConfig?: LambdaFunctionLoggingConfig;
         MemorySize?: number | string;
         PackageType?: StringType; // Image | Zip
-        RecursiveLoop?: StringType; // Allow | Terminate (Note: not standard in CloudFormation)
+        RecursiveLoop?: StringType; // Allow | Terminate
         ReservedConcurrentExecutions?: number | string;
         Role: StringType;
         Runtime?: StringType;

@@ -64,7 +64,7 @@ export class IntrinsicResolverImpl implements IntrinsicResolver {
         log.debug(`[IntrinsicResolverImpl.constructor] Registered factory for ${CfIntrinsicFunctions.Fn_GetAtt}`);
         this.factories[CfIntrinsicFunctions.Fn_FindInMap] = (utils) => new FnFindInMapIntrinsic(utils);
         log.debug(`[IntrinsicResolverImpl.constructor] Registered factory for ${CfIntrinsicFunctions.Fn_FindInMap}`);
-        this.factories[CfIntrinsicFunctions.Fn_Sub] = (utils) => new FnSubIntrinsic(utils);
+        this.factories[CfIntrinsicFunctions.Fn_Sub] = (utils) => new FnSubIntrinsic(utils, this.resolver);
         log.debug(`[IntrinsicResolverImpl.constructor] Registered factory for ${CfIntrinsicFunctions.Fn_Sub}`);
         this.factories[CfIntrinsicFunctions.Fn_ImportValue] = (utils) => new FnImportValueIntrinsic(utils);
         log.debug(`[IntrinsicResolverImpl.constructor] Registered factory for ${CfIntrinsicFunctions.Fn_ImportValue}`);

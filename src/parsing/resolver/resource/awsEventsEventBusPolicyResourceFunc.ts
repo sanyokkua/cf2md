@@ -2,11 +2,11 @@ import { IntrinsicContext } from '../../types/intrinsic-types';
 import { BaseResource } from './BaseResourceImpl';
 
 export class AwsEventsEventBusPolicyResource extends BaseResource {
-    refFunc(context: IntrinsicContext): string {
+    override refFunc(context: IntrinsicContext): string {
         return this.arnGenFunc(context);
     }
 
-    arnGenFunc(context: IntrinsicContext): string {
+    override arnGenFunc(context: IntrinsicContext): string {
         const { ctx, resource } = context;
         if (!resource._arn) {
             const region = ctx.getRegion();
@@ -18,7 +18,7 @@ export class AwsEventsEventBusPolicyResource extends BaseResource {
         return resource._arn;
     }
 
-    idGenFunc(context: IntrinsicContext): string {
+    override idGenFunc(context: IntrinsicContext): string {
         const { ctx, resource } = context;
         if (!resource._id) {
             resource._id = this.resourceUtils.generatePrefixedId('policy', 6, ctx);

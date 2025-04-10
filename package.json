@@ -36,10 +36,10 @@
     },
     "homepage": "https://github.com/sanyokkua/cf2md#readme",
     "devDependencies": {
+        "@eslint/js": "^9.23.0",
         "@types/jest": "^29.5.14",
         "@typescript-eslint/eslint-plugin": "^8.26.0",
         "@typescript-eslint/types": "^8.26.0",
-        "@eslint/js": "^9.23.0",
         "eslint": "^9.21.0",
         "husky": "^9.1.7",
         "jest": "^29.7.0",
@@ -53,9 +53,11 @@
     "dependencies": {
         "coreutilsts": "^1.0.1",
         "js-base64": "^3.7.7",
+        "jsonpath-plus": "^10.3.0",
         "loglevel": "^1.9.2",
         "typia": "^8.0.0",
-        "uuid": "^11.1.0"
+        "uuid": "^11.1.0",
+        "velocityjs": "^2.0.6"
     },
     "prettier": {
         "printWidth": 150,

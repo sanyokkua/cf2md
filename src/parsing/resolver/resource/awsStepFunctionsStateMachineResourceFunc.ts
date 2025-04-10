@@ -3,11 +3,11 @@ import { IntrinsicContext } from '../../types/intrinsic-types';
 import { BaseResource } from './BaseResourceImpl';
 
 export class AwsStepFunctionsStateMachineResource extends BaseResource {
-    refFunc(context: IntrinsicContext): string {
+    override refFunc(context: IntrinsicContext): string {
         return this.arnGenFunc(context);
     }
 
-    getAttFunc(context: IntrinsicContext, key: string): unknown {
+    override getAttFunc(context: IntrinsicContext, key: string): unknown {
         const { ctx } = context;
         if (key === 'Arn') {
             return this.arnGenFunc(context);
@@ -26,7 +26,7 @@ export class AwsStepFunctionsStateMachineResource extends BaseResource {
         return this.idGenFunc(context);
     }
 
-    arnGenFunc(context: IntrinsicContext): string {
+    override arnGenFunc(context: IntrinsicContext): string {
         const { ctx, logicalId, resource, valueResolver } = context;
         if (!resource._arn) {
             const region = ctx.getRegion();
@@ -47,7 +47,7 @@ export class AwsStepFunctionsStateMachineResource extends BaseResource {
         return resource._arn;
     }
 
-    idGenFunc(context: IntrinsicContext): string {
+    override idGenFunc(context: IntrinsicContext): string {
         const { resource } = context;
         if (!resource._id) {
             resource._id = this.arnGenFunc(context);

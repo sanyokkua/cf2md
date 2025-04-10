@@ -1,7 +1,7 @@
 // Create a dummy context implementing ResolvingContext for testing purposes.
 import { ValueResolverImpl } from '../../../src/parsing/resolver/value-resolver';
 import { CloudFormationTemplate } from '../../../src/parsing/types/cloudformation-model';
-import { Intrinsic, IntrinsicResolver } from '../../../src/parsing/types/intrinsic-types';
+import { Intrinsic, IntrinsicResolver, ResourceIntrinsicResolver } from '../../../src/parsing/types/intrinsic-types';
 import { ResolvingContext, ValueResolver } from '../../../src/parsing/types/resolving-types';
 import { IntrinsicUtils } from '../../../src/parsing/types/util-service-types';
 
@@ -32,6 +32,7 @@ describe('ValueResolver', () => {
     let valueResolver: ValueResolver;
     let mockIntrinsicUtils: jest.Mocked<IntrinsicUtils>;
     let mockIntrinsicResolver: jest.Mocked<IntrinsicResolver>;
+    let mockResourceResolver: jest.Mocked<ResourceIntrinsicResolver>;
     let dummyCtx: ResolvingContext;
 
     beforeEach(() => {
@@ -46,9 +47,13 @@ describe('ValueResolver', () => {
             getIntrinsic: jest.fn(),
         };
 
+        mockResourceResolver = {
+            getResourceIntrinsic: jest.fn(),
+        };
+
         dummyCtx = createDummyContext();
 
-        valueResolver = new ValueResolverImpl(mockIntrinsicUtils, mockIntrinsicResolver);
+        valueResolver = new ValueResolverImpl(mockIntrinsicUtils, mockIntrinsicResolver, mockResourceResolver);
         jest.clearAllMocks();
     });
 

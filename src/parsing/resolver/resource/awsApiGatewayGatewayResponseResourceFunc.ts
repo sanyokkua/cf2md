@@ -3,7 +3,7 @@ import { IntrinsicContext } from '../../types/intrinsic-types';
 import { BaseResource } from './BaseResourceImpl';
 
 export class AwsApiGatewayGatewayResponseResource extends BaseResource {
-    getAttFunc(context: IntrinsicContext, key: string): string {
+    override getAttFunc(context: IntrinsicContext, key: string): string {
         const { ctx, logicalId, resource, valueResolver } = context;
         if (key === 'ResponseType') {
             const typedResource = resource as ApiGatewayGatewayResponseResource;
@@ -18,7 +18,7 @@ export class AwsApiGatewayGatewayResponseResource extends BaseResource {
         return this.idGenFunc(context);
     }
 
-    arnGenFunc(context: IntrinsicContext): string {
+    override arnGenFunc(context: IntrinsicContext): string {
         const { ctx, logicalId, resource, valueResolver } = context;
         if (!resource._arn) {
             const region = ctx.getRegion();

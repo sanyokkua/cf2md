@@ -3,7 +3,7 @@ import { IntrinsicContext } from '../../types/intrinsic-types';
 import { BaseResource } from './BaseResourceImpl';
 
 export class AwsApiGatewayDomainNameResource extends BaseResource {
-    getAttFunc(context: IntrinsicContext, key: string): unknown {
+    override getAttFunc(context: IntrinsicContext, key: string): unknown {
         if (key === 'DistributionDomainName') {
             // DistributionDomainName
             // The Amazon CloudFront distribution domain name that's mapped to the custom domain name.
@@ -33,7 +33,7 @@ export class AwsApiGatewayDomainNameResource extends BaseResource {
         return this.idGenFunc(context);
     }
 
-    arnGenFunc(context: IntrinsicContext): string {
+    override arnGenFunc(context: IntrinsicContext): string {
         const { ctx, logicalId, resource, valueResolver } = context;
         if (!resource._arn) {
             const region = ctx.getRegion();

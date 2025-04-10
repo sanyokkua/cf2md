@@ -1,0 +1,1184 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "Educational CloudFormation Template demonstrating API Gateway endpoints integrated with SQS (with DLQ), SNS (with DLQ), EventBridge (EventBus and Rule), DynamoDB, S3, Step Functions, and multiple Lambda functions with roles, policies, models, and CloudWatch Logs. All resources are given descriptive logical names.\n",
+    "Resources": {
+        "RestApi": {
+            "Type": "AWS::ApiGateway::RestApi",
+            "Properties": {
+                "Name": "EducationalAPI"
+            }
+        },
+        "ApiModelSQS": {
+            "Type": "AWS::ApiGateway::Model",
+            "Properties": {
+                "RestApiId": {
+                    "Ref": "RestApi"
+                },
+                "Name": "SQSModel",
+                "ContentType": "application/json",
+                "Schema": "{\"type\":\"object\",\"properties\":{\"message\":{\"type\":\"string\"}}}"
+            }
+        },
+        "ApiModelSNS": {
+            "Type": "AWS::ApiGateway::Model",
+            "Properties": {
+                "RestApiId": {
+                    "Ref": "RestApi"
+                },
+                "Name": "SNSModel",
+                "ContentType": "application/json",
+                "Schema": "{\"type\":\"object\",\"properties\":{\"message\":{\"type\":\"string\"}}}"
+            }
+        },
+        "ApiModelEventBus": {
+            "Type": "AWS::ApiGateway::Model",
+            "Properties": {
+                "RestApiId": {
+                    "Ref": "RestApi"
+                },
+                "Name": "EventBusModel",
+                "ContentType": "application/json",
+                "Schema": "{\"type\":\"object\",\"properties\":{\"detail\":{\"type\":\"string\"}}}"
+            }
+        },
+        "ApiModelStepFunction": {
+            "Type": "AWS::ApiGateway::Model",
+            "Properties": {
+                "RestApiId": {
+                    "Ref": "RestApi"
+                },
+                "Name": "StepFunctionModel",
+                "ContentType": "application/json",
+                "Schema": "{\"type\":\"object\",\"properties\":{\"task\":{\"type\":\"string\"}}}"
+            }
+        },
+        "ApiModelDDB": {
+            "Type": "AWS::ApiGateway::Model",
+            "Properties": {
+                "RestApiId": {
+                    "Ref": "RestApi"
+                },
+                "Name": "DynamoDBModel",
+                "ContentType": "application/json",
+                "Schema": "{\"type\":\"object\",\"properties\":{\"id\":{\"type\":\"string\"},\"data\":{\"type\":\"string\"}}}"
+            }
+        },
+        "ApiModelS3": {
+            "Type": "AWS::ApiGateway::Model",
+            "Properties": {
+                "RestApiId": {
+                    "Ref": "RestApi"
+                },
+                "Name": "S3Model",
+                "ContentType": "application/json",
+                "Schema": "{\"type\":\"object\",\"properties\":{\"event\":{\"type\":\"string\"}}}"
+            }
+        },
+        "ApiModelLambda": {
+            "Type": "AWS::ApiGateway::Model",
+            "Properties": {
+                "RestApiId": {
+                    "Ref": "RestApi"
+                },
+                "Name": "LambdaModel",
+                "ContentType": "application/json",
+                "Schema": "{\"type\":\"object\",\"properties\":{\"input\":{\"type\":\"string\"}}}"
+            }
+        },
+        "CreateResource": {
+            "Type": "AWS::ApiGateway::Resource",
+            "Properties": {
+                "ParentId": {
+                    "Fn::GetAtt": ["RestApi", "RootResourceId"]
+                },
+                "PathPart": "create",
+                "RestApiId": {
+                    "Ref": "RestApi"
+                }
+            }
+        },
+        "CreateMessageResource": {
+            "Type": "AWS::ApiGateway::Resource",
+            "Properties": {
+                "ParentId": {
+                    "Ref": "CreateResource"
+                },
+                "PathPart": "message",
+                "RestApiId": {
+                    "Ref": "RestApi"
+                }
+            }
+        },
+        "CreateMessageSQSResource": {
+            "Type": "AWS::ApiGateway::Resource",
+            "Properties": {
+                "ParentId": {
+                    "Ref": "CreateMessageResource"
+                },
+                "PathPart": "sqs",
+                "RestApiId": {
+                    "Ref": "RestApi"
+                }
+            }
+        },
+        "CreateMessageEventBusResource": {
+            "Type": "AWS::ApiGateway::Resource",
+            "Properties": {
+                "ParentId": {
+                    "Ref": "CreateMessageResource"
+                },
+                "PathPart": "eventBus",
+                "RestApiId": {
+                    "Ref": "RestApi"
+                }
+            }
+        },
+        "CreateMessageSNSResource": {
+            "Type": "AWS::ApiGateway::Resource",
+            "Properties": {
+                "ParentId": {
+                    "Ref": "CreateMessageResource"
+                },
+                "PathPart": "sns",
+                "RestApiId": {
+                    "Ref": "RestApi"
+                }
+            }
+        },
+        "CreateMessageStepFunctionResource": {
+            "Type": "AWS::ApiGateway::Resource",
+            "Properties": {
+                "ParentId": {
+                    "Ref": "CreateMessageResource"
+                },
+                "PathPart": "stepfunction",
+                "RestApiId": {
+                    "Ref": "RestApi"
+                }
+            }
+        },
+        "CreateMessageDDBResource": {
+            "Type": "AWS::ApiGateway::Resource",
+            "Properties": {
+                "ParentId": {
+                    "Ref": "CreateMessageResource"
+                },
+                "PathPart": "dynamodb",
+                "RestApiId": {
+                    "Ref": "RestApi"
+                }
+            }
+        },
+        "CreateMessageS3Resource": {
+            "Type": "AWS::ApiGateway::Resource",
+            "Properties": {
+                "ParentId": {
+                    "Ref": "CreateMessageResource"
+                },
+                "PathPart": "s3",
+                "RestApiId": {
+                    "Ref": "RestApi"
+                }
+            }
+        },
+        "RetrieveResource": {
+            "Type": "AWS::ApiGateway::Resource",
+            "Properties": {
+                "ParentId": {
+                    "Fn::GetAtt": ["RestApi", "RootResourceId"]
+                },
+                "PathPart": "retrieve",
+                "RestApiId": {
+                    "Ref": "RestApi"
+                }
+            }
+        },
+        "RetrieveMessageResource": {
+            "Type": "AWS::ApiGateway::Resource",
+            "Properties": {
+                "ParentId": {
+                    "Ref": "RetrieveResource"
+                },
+                "PathPart": "message",
+                "RestApiId": {
+                    "Ref": "RestApi"
+                }
+            }
+        },
+        "RetrieveMessageDDBResource": {
+            "Type": "AWS::ApiGateway::Resource",
+            "Properties": {
+                "ParentId": {
+                    "Ref": "RetrieveMessageResource"
+                },
+                "PathPart": "dynamodb",
+                "RestApiId": {
+                    "Ref": "RestApi"
+                }
+            }
+        },
+        "RetrieveMessageLambdaResource": {
+            "Type": "AWS::ApiGateway::Resource",
+            "Properties": {
+                "ParentId": {
+                    "Ref": "RetrieveMessageResource"
+                },
+                "PathPart": "lambda",
+                "RestApiId": {
+                    "Ref": "RestApi"
+                }
+            }
+        },
+        "DeleteResource": {
+            "Type": "AWS::ApiGateway::Resource",
+            "Properties": {
+                "ParentId": {
+                    "Fn::GetAtt": ["RestApi", "RootResourceId"]
+                },
+                "PathPart": "delete",
+                "RestApiId": {
+                    "Ref": "RestApi"
+                }
+            }
+        },
+        "DeleteMessageResource": {
+            "Type": "AWS::ApiGateway::Resource",
+            "Properties": {
+                "ParentId": {
+                    "Ref": "DeleteResource"
+                },
+                "PathPart": "message",
+                "RestApiId": {
+                    "Ref": "RestApi"
+                }
+            }
+        },
+        "DeleteMessageLambdaResource": {
+            "Type": "AWS::ApiGateway::Resource",
+            "Properties": {
+                "ParentId": {
+                    "Ref": "DeleteMessageResource"
+                },
+                "PathPart": "lambda",
+                "RestApiId": {
+                    "Ref": "RestApi"
+                }
+            }
+        },
+        "MainSQSQueue": {
+            "Type": "AWS::SQS::Queue",
+            "Properties": {
+                "QueueName": "MainQueue.fifo",
+                "FifoQueue": true,
+                "RedrivePolicy": {
+                    "deadLetterTargetArn": {
+                        "Fn::GetAtt": ["SQSDLQQueue", "Arn"]
+                    },
+                    "maxReceiveCount": 3
+                }
+            }
+        },
+        "PostCreateMessageSQSMethod": {
+            "Type": "AWS::ApiGateway::Method",
+            "Properties": {
+                "HttpMethod": "POST",
+                "ResourceId": {
+                    "Ref": "CreateMessageSQSResource"
+                },
+                "RestApiId": {
+                    "Ref": "RestApi"
+                },
+                "AuthorizationType": "NONE",
+                "RequestModels": {
+                    "application/json": {
+                        "Ref": "ApiModelSQS"
+                    }
+                },
+                "Integration": {
+                    "IntegrationHttpMethod": "POST",
+                    "Type": "AWS",
+                    "Uri": {
+                        "Fn::Sub": "arn:aws:apigateway:${AWS::Region}:sqs:action/SendMessage"
+                    },
+                    "Credentials": {
+                        "Fn::GetAtt": ["ApiGatewaySQSRole", "Arn"]
+                    },
+                    "RequestTemplates": {
+                        "application/json": {
+                            "Fn::Sub": "{\n  \"QueueUrl\": \"${MainSQSQueue}\",\n  \"MessageBody\": \"$input.body\"\n}\n"
+                        }
+                    }
+                },
+                "MethodResponses": [
+                    {
+                        "StatusCode": 200
+                    }
+                ]
+            }
+        },
+        "PostCreateMessageEventBusMethod": {
+            "Type": "AWS::ApiGateway::Method",
+            "Properties": {
+                "HttpMethod": "POST",
+                "ResourceId": {
+                    "Ref": "CreateMessageEventBusResource"
+                },
+                "RestApiId": {
+                    "Ref": "RestApi"
+                },
+                "AuthorizationType": "NONE",
+                "RequestModels": {
+                    "application/json": {
+                        "Ref": "ApiModelEventBus"
+                    }
+                },
+                "Integration": {
+                    "IntegrationHttpMethod": "POST",
+                    "Type": "AWS",
+                    "Uri": {
+                        "Fn::Sub": "arn:aws:apigateway:${AWS::Region}:events:action/PutEvents"
+                    },
+                    "Credentials": {
+                        "Fn::GetAtt": ["ApiGatewayEventBridgeRole", "Arn"]
+                    },
+                    "RequestTemplates": {
+                        "application/json": {
+                            "Fn::Sub": "{\n  \"Entries\": [{\n    \"EventBusName\": \"${EventBus}\",\n    \"Source\": \"custom.api\",\n    \"DetailType\": \"API Event\",\n    \"Detail\": \"$input.body\"\n  }]\n}\n"
+                        }
+                    }
+                },
+                "MethodResponses": [
+                    {
+                        "StatusCode": 200
+                    }
+                ]
+            }
+        },
+        "PostCreateMessageSNSMethod": {
+            "Type": "AWS::ApiGateway::Method",
+            "Properties": {
+                "HttpMethod": "POST",
+                "ResourceId": {
+                    "Ref": "CreateMessageSNSResource"
+                },
+                "RestApiId": {
+                    "Ref": "RestApi"
+                },
+                "AuthorizationType": "NONE",
+                "RequestModels": {
+                    "application/json": {
+                        "Ref": "ApiModelSNS"
+                    }
+                },
+                "Integration": {
+                    "IntegrationHttpMethod": "POST",
+                    "Type": "AWS",
+                    "Uri": {
+                        "Fn::Sub": "arn:aws:apigateway:${AWS::Region}:sns:action/Publish"
+                    },
+                    "Credentials": {
+                        "Fn::GetAtt": ["ApiGatewaySNSRole", "Arn"]
+                    },
+                    "RequestTemplates": {
+                        "application/json": {
+                            "Fn::Sub": "{\n  \"TopicArn\": \"${SNSTopic}\",\n  \"Message\": \"$input.body\"\n}\n"
+                        }
+                    }
+                },
+                "MethodResponses": [
+                    {
+                        "StatusCode": 200
+                    }
+                ]
+            }
+        },
+        "PostCreateMessageStepFunctionMethod": {
+            "Type": "AWS::ApiGateway::Method",
+            "Properties": {
+                "HttpMethod": "POST",
+                "ResourceId": {
+                    "Ref": "CreateMessageStepFunctionResource"
+                },
+                "RestApiId": {
+                    "Ref": "RestApi"
+                },
+                "AuthorizationType": "NONE",
+                "RequestModels": {
+                    "application/json": {
+                        "Ref": "ApiModelStepFunction"
+                    }
+                },
+                "Integration": {
+                    "IntegrationHttpMethod": "POST",
+                    "Type": "AWS",
+                    "Uri": {
+                        "Fn::Sub": "arn:aws:apigateway:${AWS::Region}:states:action/StartExecution"
+                    },
+                    "Credentials": {
+                        "Fn::GetAtt": ["ApiGatewayStepFunctionsRole", "Arn"]
+                    },
+                    "RequestTemplates": {
+                        "application/json": {
+                            "Fn::Sub": "{\n  \"stateMachineArn\": \"${StateMachine}\",\n  \"input\": \"$input.body\"\n}\n"
+                        }
+                    }
+                },
+                "MethodResponses": [
+                    {
+                        "StatusCode": 200
+                    }
+                ]
+            }
+        },
+        "PutCreateMessageDDBMethod": {
+            "Type": "AWS::ApiGateway::Method",
+            "Properties": {
+                "HttpMethod": "PUT",
+                "ResourceId": {
+                    "Ref": "CreateMessageDDBResource"
+                },
+                "RestApiId": {
+                    "Ref": "RestApi"
+                },
+                "AuthorizationType": "NONE",
+                "RequestModels": {
+                    "application/json": {
+                        "Ref": "ApiModelDDB"
+                    }
+                },
+                "Integration": {
+                    "IntegrationHttpMethod": "POST",
+                    "Type": "AWS",
+                    "Uri": {
+                        "Fn::Sub": "arn:aws:apigateway:${AWS::Region}:dynamodb:action/PutItem"
+                    },
+                    "Credentials": {
+                        "Fn::GetAtt": ["ApiGatewayDDBRole", "Arn"]
+                    },
+                    "RequestTemplates": {
+                        "application/json": {
+                            "Fn::Sub": "{\n  \"TableName\": \"${DDBTable}\",\n  \"Item\": {\n    \"id\": {\"S\": \"$input.path('$.id')\"},\n    \"data\": {\"S\": \"$input.path('$.data')\"}\n  }\n}\n"
+                        }
+                    }
+                },
+                "MethodResponses": [
+                    {
+                        "StatusCode": 200
+                    }
+                ]
+            }
+        },
+        "PutCreateMessageS3Method": {
+            "Type": "AWS::ApiGateway::Method",
+            "Properties": {
+                "HttpMethod": "PUT",
+                "ResourceId": {
+                    "Ref": "CreateMessageS3Resource"
+                },
+                "RestApiId": {
+                    "Ref": "RestApi"
+                },
+                "AuthorizationType": "NONE",
+                "RequestModels": {
+                    "application/json": {
+                        "Ref": "ApiModelS3"
+                    }
+                },
+                "Integration": {
+                    "IntegrationHttpMethod": "PUT",
+                    "Type": "AWS",
+                    "Uri": {
+                        "Fn::Sub": "arn:aws:apigateway:${AWS::Region}:s3:path/${S3Bucket}/"
+                    },
+                    "Credentials": {
+                        "Fn::GetAtt": ["ApiGatewayS3Role", "Arn"]
+                    },
+                    "RequestTemplates": {
+                        "application/json": {
+                            "Fn::Sub": "{\n  \"Bucket\": \"${S3Bucket}\",\n  \"Key\": \"event-001.json\",\n  \"Body\": \"$input.body\"\n}\n"
+                        }
+                    }
+                },
+                "MethodResponses": [
+                    {
+                        "StatusCode": 200
+                    }
+                ]
+            }
+        },
+        "GetRetrieveMessageDDBMethod": {
+            "Type": "AWS::ApiGateway::Method",
+            "Properties": {
+                "HttpMethod": "GET",
+                "ResourceId": {
+                    "Ref": "RetrieveMessageDDBResource"
+                },
+                "RestApiId": {
+                    "Ref": "RestApi"
+                },
+                "AuthorizationType": "NONE",
+                "RequestModels": {
+                    "application/json": {
+                        "Ref": "ApiModelDDB"
+                    }
+                },
+                "Integration": {
+                    "IntegrationHttpMethod": "POST",
+                    "Type": "AWS",
+                    "Uri": {
+                        "Fn::Sub": "arn:aws:apigateway:${AWS::Region}:dynamodb:action/GetItem"
+                    },
+                    "Credentials": {
+                        "Fn::GetAtt": ["ApiGatewayDDBRole", "Arn"]
+                    },
+                    "RequestTemplates": {
+                        "application/json": {
+                            "Fn::Sub": "{\n  \"TableName\": \"${DDBTable}\",\n  \"Key\": {\n    \"id\": {\"S\": \"$input.params('id')\"}\n  }\n}\n"
+                        }
+                    }
+                },
+                "MethodResponses": [
+                    {
+                        "StatusCode": 200
+                    }
+                ]
+            }
+        },
+        "GetRetrieveMessageLambdaMethod": {
+            "Type": "AWS::ApiGateway::Method",
+            "Properties": {
+                "HttpMethod": "GET",
+                "ResourceId": {
+                    "Ref": "RetrieveMessageLambdaResource"
+                },
+                "RestApiId": {
+                    "Ref": "RestApi"
+                },
+                "AuthorizationType": "NONE",
+                "RequestModels": {
+                    "application/json": {
+                        "Ref": "ApiModelLambda"
+                    }
+                },
+                "Integration": {
+                    "IntegrationHttpMethod": "POST",
+                    "Type": "AWS_PROXY",
+                    "Uri": {
+                        "Fn::Sub": "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${RetrieveLambda.Arn}/invocations"
+                    }
+                },
+                "MethodResponses": [
+                    {
+                        "StatusCode": 200
+                    }
+                ]
+            }
+        },
+        "DeleteMessageLambdaMethod": {
+            "Type": "AWS::ApiGateway::Method",
+            "Properties": {
+                "HttpMethod": "DELETE",
+                "ResourceId": {
+                    "Ref": "DeleteMessageLambdaResource"
+                },
+                "RestApiId": {
+                    "Ref": "RestApi"
+                },
+                "AuthorizationType": "NONE",
+                "RequestModels": {
+                    "application/json": {
+                        "Ref": "ApiModelLambda"
+                    }
+                },
+                "Integration": {
+                    "IntegrationHttpMethod": "POST",
+                    "Type": "AWS_PROXY",
+                    "Uri": {
+                        "Fn::Sub": "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${DeleteLambda.Arn}/invocations"
+                    }
+                },
+                "MethodResponses": [
+                    {
+                        "StatusCode": 200
+                    }
+                ]
+            }
+        },
+        "ApiDeployment": {
+            "Type": "AWS::ApiGateway::Deployment",
+            "DependsOn": [
+                "PostCreateMessageSQSMethod",
+                "PostCreateMessageEventBusMethod",
+                "PostCreateMessageSNSMethod",
+                "PostCreateMessageStepFunctionMethod",
+                "PutCreateMessageDDBMethod",
+                "PutCreateMessageS3Method",
+                "GetRetrieveMessageDDBMethod",
+                "GetRetrieveMessageLambdaMethod",
+                "DeleteMessageLambdaMethod"
+            ],
+            "Properties": {
+                "RestApiId": {
+                    "Ref": "RestApi"
+                },
+                "StageName": "prod"
+            }
+        },
+
+        "SQSDLQQueue": {
+            "Type": "AWS::SQS::Queue",
+            "Properties": {
+                "QueueName": "MainDLQ.fifo",
+                "FifoQueue": true
+            }
+        },
+        "SNSTopic": {
+            "Type": "AWS::SNS::Topic",
+            "Properties": {
+                "TopicName": "EducationalSNSTopic"
+            }
+        },
+        "SNSDLQSQS": {
+            "Type": "AWS::SQS::Queue",
+            "Properties": {
+                "QueueName": "SNSDLQ.fifo",
+                "FifoQueue": true
+            }
+        },
+        "SNSTopicSubscription": {
+            "Type": "AWS::SNS::Subscription",
+            "Properties": {
+                "TopicArn": {
+                    "Ref": "SNSTopic"
+                },
+                "Protocol": "sqs",
+                "Endpoint": {
+                    "Fn::GetAtt": ["SNSDLQSQS", "Arn"]
+                },
+                "RawMessageDelivery": true
+            }
+        },
+        "EventBus": {
+            "Type": "AWS::Events::EventBus",
+            "Properties": {
+                "Name": "EducationalEventBus"
+            }
+        },
+        "EventRule": {
+            "Type": "AWS::Events::Rule",
+            "Properties": {
+                "Name": "EducationalEventRule",
+                "EventBusName": {
+                    "Ref": "EventBus"
+                },
+                "EventPattern": {
+                    "source": ["custom.api"]
+                },
+                "Targets": [
+                    {
+                        "Arn": {
+                            "Fn::GetAtt": ["RuleLambda", "Arn"]
+                        },
+                        "Id": "RuleLambdaTarget",
+                        "RoleArn": {
+                            "Fn::GetAtt": ["EventBridgeRuleRole", "Arn"]
+                        }
+                    }
+                ]
+            }
+        },
+        "LambdaExecutionRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "RoleName": "LambdaExecutionRole",
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": "lambda.amazonaws.com"
+                            },
+                            "Action": "sts:AssumeRole"
+                        }
+                    ]
+                },
+                "Path": "/",
+                "Policies": [
+                    {
+                        "PolicyName": "LambdaBasicExecution",
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Action": ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"],
+                                    "Resource": "*"
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "AuthorizerLambda": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+                "FunctionName": "AuthorizerLambda",
+                "Handler": "index.handler",
+                "Role": {
+                    "Fn::GetAtt": ["LambdaExecutionRole", "Arn"]
+                },
+                "Runtime": "nodejs14.x",
+                "MemorySize": 128,
+                "Timeout": 5,
+                "Code": {
+                    "ZipFile": "exports.handler = async (event) => {\n  return { statusCode: 200, body: \"Authorized\" };\n};\n"
+                }
+            }
+        },
+        "RetrieveLambda": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+                "FunctionName": "RetrieveLambda",
+                "Handler": "index.handler",
+                "Role": {
+                    "Fn::GetAtt": ["LambdaExecutionRole", "Arn"]
+                },
+                "Runtime": "nodejs14.x",
+                "MemorySize": 256,
+                "Timeout": 10,
+                "Code": {
+                    "ZipFile": "exports.handler = async (event) => {\n  return { statusCode: 200, body: \"Data retrieved\" };\n};\n"
+                }
+            }
+        },
+        "DeleteLambda": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+                "FunctionName": "DeleteLambda",
+                "Handler": "index.handler",
+                "Role": {
+                    "Fn::GetAtt": ["LambdaExecutionRole", "Arn"]
+                },
+                "Runtime": "nodejs14.x",
+                "MemorySize": 256,
+                "Timeout": 10,
+                "Code": {
+                    "ZipFile": "exports.handler = async (event) => {\n  return { statusCode: 200, body: \"Deleted\" };\n};\n"
+                }
+            }
+        },
+        "RuleLambda": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+                "FunctionName": "RuleLambda",
+                "Handler": "index.handler",
+                "Role": {
+                    "Fn::GetAtt": ["LambdaExecutionRole", "Arn"]
+                },
+                "Runtime": "nodejs14.x",
+                "MemorySize": 512,
+                "Timeout": 15,
+                "Code": {
+                    "ZipFile": "exports.handler = async (event) => {\n  return { statusCode: 200, body: \"Event processed by RuleLambda\" };\n};\n"
+                }
+            }
+        },
+        "SQSLambda": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+                "FunctionName": "SQSLambda",
+                "Handler": "index.handler",
+                "Role": {
+                    "Fn::GetAtt": ["LambdaExecutionRole", "Arn"]
+                },
+                "Runtime": "nodejs14.x",
+                "MemorySize": 128,
+                "Timeout": 10,
+                "Code": {
+                    "ZipFile": "exports.handler = async (event) => {\n  console.log(\"SQS message processed\");\n  return { statusCode: 200, body: \"Processed by SQSLambda\" };\n};\n"
+                }
+            }
+        },
+        "SNSLambda": {
+            "Type": "AWS::Lambda::Function",
+            "Properties": {
+                "FunctionName": "SNSLambda",
+                "Handler": "index.handler",
+                "Role": {
+                    "Fn::GetAtt": ["LambdaExecutionRole", "Arn"]
+                },
+                "Runtime": "nodejs14.x",
+                "MemorySize": 128,
+                "Timeout": 10,
+                "Code": {
+                    "ZipFile": "exports.handler = async (event) => {\n  console.log(\"SNS message processed\");\n  return { statusCode: 200, body: \"Processed by SNSLambda\" };\n};\n"
+                }
+            }
+        },
+        "AuthorizerLambdaLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+                "LogGroupName": "/aws/lambda/AuthorizerLambda",
+                "RetentionInDays": 14
+            }
+        },
+        "RetrieveLambdaLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+                "LogGroupName": "/aws/lambda/RetrieveLambda",
+                "RetentionInDays": 14
+            }
+        },
+        "DeleteLambdaLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+                "LogGroupName": "/aws/lambda/DeleteLambda",
+                "RetentionInDays": 14
+            }
+        },
+        "RuleLambdaLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+                "LogGroupName": "/aws/lambda/RuleLambda",
+                "RetentionInDays": 14
+            }
+        },
+        "SQSLambdaLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+                "LogGroupName": "/aws/lambda/SQSLambda",
+                "RetentionInDays": 14
+            }
+        },
+        "SNSLambdaLogGroup": {
+            "Type": "AWS::Logs::LogGroup",
+            "Properties": {
+                "LogGroupName": "/aws/lambda/SNSLambda",
+                "RetentionInDays": 14
+            }
+        },
+        "DDBTable": {
+            "Type": "AWS::DynamoDB::Table",
+            "Properties": {
+                "TableName": "EducationalTable",
+                "AttributeDefinitions": [
+                    {
+                        "AttributeName": "id",
+                        "AttributeType": "S"
+                    }
+                ],
+                "KeySchema": [
+                    {
+                        "AttributeName": "id",
+                        "KeyType": "HASH"
+                    }
+                ],
+                "BillingMode": "PAY_PER_REQUEST"
+            }
+        },
+        "StateMachine": {
+            "Type": "AWS::StepFunctions::StateMachine",
+            "Properties": {
+                "StateMachineName": "EducationalStateMachine",
+                "RoleArn": {
+                    "Fn::GetAtt": ["StepFunctionRole", "Arn"]
+                },
+                "DefinitionString": "{\n  \"StartAt\": \"TaskState\",\n  \"States\": {\n    \"TaskState\": {\n      \"Type\": \"Task\",\n      \"Resource\": \"arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:SQSLambda\",\n      \"End\": true\n    }\n  }\n}\n"
+            }
+        },
+        "S3Bucket": {
+            "Type": "AWS::S3::Bucket",
+            "Properties": {
+                "BucketName": "educational-s3-bucket"
+            }
+        },
+        "ApiGatewaySQSRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "RoleName": "ApiGatewaySQSRole",
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": "apigateway.amazonaws.com"
+                            },
+                            "Action": "sts:AssumeRole"
+                        }
+                    ]
+                },
+                "Policies": [
+                    {
+                        "PolicyName": "SQSIntegrationPolicy",
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Action": ["sqs:SendMessage"],
+                                    "Resource": {
+                                        "Fn::GetAtt": ["MainSQSQueue", "Arn"]
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "ApiGatewaySNSRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "RoleName": "ApiGatewaySNSRole",
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": "apigateway.amazonaws.com"
+                            },
+                            "Action": "sts:AssumeRole"
+                        }
+                    ]
+                },
+                "Policies": [
+                    {
+                        "PolicyName": "SNSIntegrationPolicy",
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Action": ["sns:Publish"],
+                                    "Resource": {
+                                        "Ref": "SNSTopic"
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "ApiGatewayEventBridgeRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "RoleName": "ApiGatewayEventBridgeRole",
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": "apigateway.amazonaws.com"
+                            },
+                            "Action": "sts:AssumeRole"
+                        }
+                    ]
+                },
+                "Policies": [
+                    {
+                        "PolicyName": "EventBridgeIntegrationPolicy",
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Action": ["events:PutEvents"],
+                                    "Resource": {
+                                        "Ref": "EventBus"
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "ApiGatewayStepFunctionsRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "RoleName": "ApiGatewayStepFunctionsRole",
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": "apigateway.amazonaws.com"
+                            },
+                            "Action": "sts:AssumeRole"
+                        }
+                    ]
+                },
+                "Policies": [
+                    {
+                        "PolicyName": "StepFunctionsIntegrationPolicy",
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Action": ["states:StartExecution"],
+                                    "Resource": {
+                                        "Ref": "StateMachine"
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "ApiGatewayDDBRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "RoleName": "ApiGatewayDDBRole",
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": "apigateway.amazonaws.com"
+                            },
+                            "Action": "sts:AssumeRole"
+                        }
+                    ]
+                },
+                "Policies": [
+                    {
+                        "PolicyName": "DynamoDBIntegrationPolicy",
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Action": ["dynamodb:PutItem", "dynamodb:GetItem"],
+                                    "Resource": {
+                                        "Fn::GetAtt": ["DDBTable", "Arn"]
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "ApiGatewayS3Role": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "RoleName": "ApiGatewayS3Role",
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": "apigateway.amazonaws.com"
+                            },
+                            "Action": "sts:AssumeRole"
+                        }
+                    ]
+                },
+                "Policies": [
+                    {
+                        "PolicyName": "S3IntegrationPolicy",
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Action": ["s3:PutObject"],
+                                    "Resource": {
+                                        "Fn::Sub": "arn:aws:s3:::${S3Bucket}/*"
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "EventBridgeRuleRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "RoleName": "EventBridgeRuleRole",
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": "events.amazonaws.com"
+                            },
+                            "Action": "sts:AssumeRole"
+                        }
+                    ]
+                },
+                "Policies": [
+                    {
+                        "PolicyName": "EventBridgeInvokeLambdaPolicy",
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Action": ["lambda:InvokeFunction"],
+                                    "Resource": {
+                                        "Fn::GetAtt": ["RuleLambda", "Arn"]
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "StepFunctionRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "RoleName": "StepFunctionRole",
+                "AssumeRolePolicyDocument": {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": "states.amazonaws.com"
+                            },
+                            "Action": "sts:AssumeRole"
+                        }
+                    ]
+                },
+                "Policies": [
+                    {
+                        "PolicyName": "StepFunctionsExecutionPolicy",
+                        "PolicyDocument": {
+                            "Version": "2012-10-17",
+                            "Statement": [
+                                {
+                                    "Effect": "Allow",
+                                    "Action": ["lambda:InvokeFunction"],
+                                    "Resource": "*"
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        }
+    },
+    "Outputs": {
+        "ApiEndpoint": {
+            "Description": "API Gateway Endpoint URL",
+            "Value": {
+                "Fn::Sub": "https://${RestApi}.execute-api.${AWS::Region}.amazonaws.com/prod"
+            }
+        }
+    }
+}

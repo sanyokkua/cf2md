@@ -3,11 +3,11 @@ import { IntrinsicContext } from '../../types/intrinsic-types';
 import { BaseResource } from './BaseResourceImpl';
 
 export class AwsApiGatewayDomainNameAccessAssociationResource extends BaseResource {
-    refFunc(context: IntrinsicContext): string {
+    override refFunc(context: IntrinsicContext): string {
         return this.arnGenFunc(context);
     }
 
-    arnGenFunc(context: IntrinsicContext): string {
+    override arnGenFunc(context: IntrinsicContext): string {
         const { ctx, logicalId, resource, valueResolver } = context;
         if (!resource._arn) {
             const region = ctx.getRegion();

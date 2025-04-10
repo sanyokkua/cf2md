@@ -2,14 +2,14 @@ import { IntrinsicContext } from '../../types/intrinsic-types';
 import { BaseResource } from './BaseResourceImpl';
 
 export class AwsApiGatewayRestApiResource extends BaseResource {
-    getAttFunc(context: IntrinsicContext, key: string): unknown {
+    override getAttFunc(context: IntrinsicContext, key: string): unknown {
         if (key === 'RootResourceId') {
             return 'STUB_RootResourceId';
         }
         return this.idGenFunc(context);
     }
 
-    arnGenFunc(context: IntrinsicContext): string {
+    override arnGenFunc(context: IntrinsicContext): string {
         const { ctx, resource } = context;
         if (!resource._arn) {
             const region = ctx.getRegion();
@@ -20,7 +20,7 @@ export class AwsApiGatewayRestApiResource extends BaseResource {
         return resource._arn;
     }
 
-    idGenFunc(context: IntrinsicContext): string {
+    override idGenFunc(context: IntrinsicContext): string {
         const { ctx, resource } = context;
         if (!resource._id) {
             resource._id = this.resourceUtils.generateAlphaNumeric(10, ctx);

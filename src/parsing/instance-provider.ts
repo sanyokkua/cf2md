@@ -20,7 +20,7 @@ class ParserServiceInstanceProviderImpl implements ParserServiceInstanceProvider
         const resourceUtils: ResourceUtils = new ResourceUtilsImpl(stringUtils, randomUtils);
         const resourceIntrinsicResolver: ResourceIntrinsicResolver = new ResourceIntrinsicResolverImpl(resourceUtils);
         const intrinsicResolver: IntrinsicResolver = new IntrinsicResolverImpl(intrinsicUtils, resourceIntrinsicResolver, stringUtils);
-        const valueResolver: ValueResolver = new ValueResolverImpl(intrinsicUtils, intrinsicResolver);
+        const valueResolver: ValueResolver = new ValueResolverImpl(intrinsicUtils, intrinsicResolver, resourceIntrinsicResolver);
         const parserUtils: ParserUtils = new ParserUtilsImpl(randomUtils);
 
         return new CfModelParserImpl(stringUtils, parserUtils, valueResolver, resourceUtils, resourceIntrinsicResolver);

@@ -1,6 +1,7 @@
 import log from 'loglevel';
 import { ParsingValidationError } from '../error/parsing-errors';
-import { Intrinsic, IntrinsicResolver } from '../types/intrinsic-types';
+import { CloudFormationResource } from '../types/cloudformation-model';
+import { Intrinsic, IntrinsicContext, IntrinsicResolver, ResourceIntrinsicResolver } from '../types/intrinsic-types';
 import { ResolvingContext, ValueResolver } from '../types/resolving-types';
 import { IntrinsicUtils } from '../types/util-service-types';
 
@@ -10,6 +11,7 @@ export class ValueResolverImpl implements ValueResolver {
     constructor(
         private readonly intrinsicUtils: IntrinsicUtils,
         private readonly intrinsicResolver: IntrinsicResolver,
+        private readonly cfResourceResolver: ResourceIntrinsicResolver,
     ) {
         log.trace('[ValueResolverImpl.constructor] Entering with arguments:', { intrinsicUtils, intrinsicResolver });
         log.trace('[ValueResolverImpl.constructor] Exiting');
@@ -82,7 +84,24 @@ export class ValueResolverImpl implements ValueResolver {
 
         log.debug(`[ValueResolverImpl.resolveObject] Recursively resolving object at path: ${ctx.getCurrentPath()}`);
         for (const key of Object.keys(value)) {
-            result[key] = this.withContextName(ctx, key, () => this.resolveValue(value[key], ctx));
+            const valueElement = value[key];
+            if (typeof valueElement === 'object') {
+                // Before processing any object, check if it is a CloudFormationResource and if it is - assign id and arn
+                const obj = valueElement as StringKeyUnknownObject;
+                if (Object.keys(obj).includes('Properties') && Object.keys(obj).includes('Type')) {
+                    const resource = obj as CloudFormationResource;
+                    const resolverFunction = (value: unknown, ctx: ResolvingContext) => this.resolveValue(value, ctx);
+                    const resolverIntr = this.cfResourceResolver.getResourceIntrinsic(resource.Type);
+                    const identifierContext: IntrinsicContext = { resource, logicalId: key, ctx: ctx, valueResolver: resolverFunction };
+                    if (resource._id === undefined) {
+                        resource._id = resolverIntr.idGenFunc(identifierContext);
+                    }
+                    if (resource._arn === undefined) {
+                        resource._arn = resolverIntr.arnGenFunc(identifierContext);
+                    }
+                }
+            }
+            result[key] = this.withContextName(ctx, key, () => this.resolveValue(valueElement, ctx));
         }
         log.trace('[ValueResolverImpl.resolveObject] Exiting with result:', result);
         return result;

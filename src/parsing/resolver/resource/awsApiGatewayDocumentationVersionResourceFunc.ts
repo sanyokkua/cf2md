@@ -3,7 +3,7 @@ import { IntrinsicContext } from '../../types/intrinsic-types';
 import { BaseResource } from './BaseResourceImpl';
 
 export class AwsApiGatewayDocumentationVersionResource extends BaseResource {
-    refFunc(context: IntrinsicContext): string {
+    override refFunc(context: IntrinsicContext): string {
         const { ctx, logicalId, resource, valueResolver } = context;
         const typedResource = resource as ApiGatewayDocumentationVersionResource;
         return this.resourceUtils.resolveString(
@@ -14,7 +14,7 @@ export class AwsApiGatewayDocumentationVersionResource extends BaseResource {
         );
     }
 
-    arnGenFunc(context: IntrinsicContext): string {
+    override arnGenFunc(context: IntrinsicContext): string {
         const { ctx, logicalId, resource, valueResolver } = context;
         if (!resource._arn) {
             const typedResource = resource as ApiGatewayDocumentationVersionResource;

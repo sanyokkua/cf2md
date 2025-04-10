@@ -2,10 +2,13 @@ import log from 'loglevel';
 import { ParserService, ParsingResult } from '../../src';
 
 import { ParserServiceInstanceProvider } from '../../src';
+import * as aiGen1 from '../testdata/ai-gen-1.json';
 import * as dynamodbTemplate from '../testdata/dynamodb-lambda.json';
 import * as ecsServiceTemplate from '../testdata/ecs-service.json';
 import * as gatewayTemplate from '../testdata/gateway-lambda-eventbus-rules-sns.json';
 import * as kinesisTemplate from '../testdata/kinesis-pipe-event-bus.json';
+import * as offLambdaEx1 from '../testdata/off-lambda-ex-1.json';
+import * as offLambdaEx2 from '../testdata/off-lambda-ex-2.json';
 import * as ruleLambdaDlqTemplate from '../testdata/rule-lambda-dlq.json';
 import * as twoDynamoDbTemplate from '../testdata/two-dynamo-db.json';
 
@@ -77,6 +80,21 @@ const templateCases: TemplateCase[] = [
     {
         name: 'gatewayTemplate',
         template: gatewayTemplate,
+        userParameters: commonUserParameters,
+    },
+    {
+        name: 'offLambdaEx1',
+        template: offLambdaEx1,
+        userParameters: commonUserParameters,
+    },
+    {
+        name: 'offLambdaEx2',
+        template: offLambdaEx2,
+        userParameters: commonUserParameters,
+    },
+    {
+        name: 'aiGen1',
+        template: aiGen1,
         userParameters: commonUserParameters,
     },
 ];

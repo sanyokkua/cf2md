@@ -1,6 +1,8 @@
 import { isNullOrBlankString, joinStrings, splitString } from 'coreutilsts';
 import { LineSeparator } from 'coreutilsts/dist/src/string/types';
 import log from 'loglevel';
+import * as velocityDef from 'velocityjs';
+import { RenderContext } from 'velocityjs';
 import { StringUtils } from '../types/util-types';
 
 export class StringUtilsImpl implements StringUtils {
@@ -75,5 +77,42 @@ export class StringUtilsImpl implements StringUtils {
         const result = splitString(value, separator);
         log.trace('[StringUtilsImpl.splitString] Exiting with result:', result);
         return result;
+    }
+
+    renderVelocityJsonString(value: string, stageVariables?: Record<string, string>): string {
+        const context: RenderContext = {
+            input: {
+                json: (input: string) => {
+                    return JSON.stringify(input);
+                },
+                path: () => {
+                    return {};
+                },
+                params: (input: string) => input,
+                body: 'stub',
+                method: 'stub',
+                headers: (input: string) => input,
+            },
+            stageVariables: stageVariables,
+            util: {
+                escapeJavaScript: (input: string) => input.replace(/'/g, "\\'"),
+                parseJson: (input: string): unknown => JSON.parse(input),
+                urlEncode: (input: string) => input,
+                urlDecode: (input: string) => input,
+                base64Encode: (input: string) => input,
+                base64Decode: (input: string) => input,
+                toJson: (input: unknown) => JSON.stringify(input),
+            },
+        };
+
+        const rendered = velocityDef.render(value, context);
+        const normalize = rendered.replace(/"{2,}/g, '"').replace(/'{2,}/g, "'").replace(/\n/, '').replace(/\n\r/, '').replace(/\r/, '');
+        try {
+            const parsedJson = JSON.parse(normalize);
+            return JSON.stringify(parsedJson, null, 0);
+        } catch (error: unknown) {
+            console.error('Rendered template is not valid JSON:', error);
+            return '';
+        }
     }
 }

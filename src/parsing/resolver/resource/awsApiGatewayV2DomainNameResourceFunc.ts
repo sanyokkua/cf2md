@@ -3,13 +3,13 @@ import { IntrinsicContext } from '../../types/intrinsic-types';
 import { BaseResource } from './BaseResourceImpl';
 
 export class AwsApiGatewayV2DomainNameResource extends BaseResource {
-    refFunc(context: IntrinsicContext): string {
+    override refFunc(context: IntrinsicContext): string {
         const { ctx, logicalId, resource, valueResolver } = context;
         const resTyped = resource as ApiGatewayV2DomainNameResource;
         return this.resourceUtils.resolveString(resTyped.Properties.DomainName, `${logicalId}.Properties.DomainName`, ctx, valueResolver);
     }
 
-    arnGenFunc(context: IntrinsicContext): string {
+    override arnGenFunc(context: IntrinsicContext): string {
         const { ctx, resource } = context;
         if (!resource._arn) {
             const region = ctx.getRegion();

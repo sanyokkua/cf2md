@@ -2,7 +2,7 @@ import { IntrinsicContext } from '../../types/intrinsic-types';
 import { BaseResource } from './BaseResourceImpl';
 
 export class AwsApiGatewayV2ApiResource extends BaseResource {
-    getAttFunc(context: IntrinsicContext, key: string): unknown {
+    override getAttFunc(context: IntrinsicContext, key: string): unknown {
         const { ctx } = context;
         if (key === 'ApiEndpoint') {
             const region = ctx.getRegion();
@@ -13,7 +13,7 @@ export class AwsApiGatewayV2ApiResource extends BaseResource {
         return this.idGenFunc(context);
     }
 
-    arnGenFunc(context: IntrinsicContext): string {
+    override arnGenFunc(context: IntrinsicContext): string {
         const { ctx, resource } = context;
         if (!resource._arn) {
             const region = ctx.getRegion();

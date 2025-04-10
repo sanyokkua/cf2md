@@ -2,7 +2,7 @@ import { IntrinsicContext } from '../../types/intrinsic-types';
 import { BaseResource } from './BaseResourceImpl';
 
 export class AwsApiGatewayUsagePlanResource extends BaseResource {
-    arnGenFunc(context: IntrinsicContext): string {
+    override arnGenFunc(context: IntrinsicContext): string {
         const { ctx, resource } = context;
         if (!resource._arn) {
             const region = ctx.getRegion();
@@ -13,7 +13,7 @@ export class AwsApiGatewayUsagePlanResource extends BaseResource {
         return resource._arn;
     }
 
-    idGenFunc(context: IntrinsicContext): string {
+    override idGenFunc(context: IntrinsicContext): string {
         const { ctx, resource } = context;
         if (!resource._id) {
             resource._id = this.resourceUtils.generatePrefixedId('usageplan', 6, ctx);

@@ -2,12 +2,15 @@ import log from 'loglevel';
 import { CfIntrinsicFunctions } from '../../enums/cf-enums';
 import { ParsingValidationError } from '../../error/parsing-errors';
 import { FnSub } from '../../types/cloudformation-model';
-import { Intrinsic } from '../../types/intrinsic-types';
+import { Intrinsic, IntrinsicContext, ResourceIntrinsicResolver } from '../../types/intrinsic-types';
 import { ResolvingContext, ValueResolverFunc } from '../../types/resolving-types';
 import { IntrinsicUtils } from '../../types/util-service-types';
 
 export class FnSubIntrinsic implements Intrinsic {
-    constructor(private readonly intrinsicUtils: IntrinsicUtils) {
+    constructor(
+        private readonly intrinsicUtils: IntrinsicUtils,
+        private readonly resourceSpecificIntrinsicResolver: ResourceIntrinsicResolver,
+    ) {
         log.trace('[FnSubIntrinsic.constructor] Entering constructor.');
         log.trace('[FnSubIntrinsic.constructor] intrinsicUtils:', this.intrinsicUtils);
         log.trace('[FnSubIntrinsic.constructor] Exiting constructor.');
@@ -22,7 +25,7 @@ export class FnSubIntrinsic implements Intrinsic {
 
         if (typeof subValue === 'string') {
             log.trace('[FnSubIntrinsic.resolveValue] Fn::Sub value is a string, calling resolveStringSubValue.');
-            const result = this.resolveStringSubValue(subValue, ctx);
+            const result = this.resolveStringSubValue(subValue, ctx, resolveValue);
             log.trace('[FnSubIntrinsic.resolveValue] Exiting, returning:', result);
             return result;
         }
@@ -38,7 +41,7 @@ export class FnSubIntrinsic implements Intrinsic {
         // This line should not be reached due to throwError
     }
 
-    private resolveStringSubValue(templateString: string, ctx: ResolvingContext): string {
+    private resolveStringSubValue(templateString: string, ctx: ResolvingContext, resolveValue: ValueResolverFunc): string {
         log.trace('[FnSubIntrinsic.resolveStringSubValue] Entering with arguments:', { templateString, ctx });
         const extractedVariables = this.parseTemplateString(templateString);
         log.debug('[FnSubIntrinsic.resolveStringSubValue] Extracted variables:', extractedVariables);
@@ -50,7 +53,36 @@ export class FnSubIntrinsic implements Intrinsic {
                 variableValues[variable] = ctx.getParameter(variable);
                 log.debug(`[FnSubIntrinsic.resolveStringSubValue] Value for variable "${variable}":`, variableValues[variable]);
             } else {
-                this.throwError(`Expected variable "${variable}" is not found in cache`, variable);
+                if (variable.includes('.') && variable.split('.').length == 2) {
+                    // This can be a reference to param in format LogicalID.PropertyName
+                    const [resourceLogicalId, propertyName] = variable.split('.');
+                    if (Object.keys(ctx.originalTemplate.Resources).includes(resourceLogicalId)) {
+                        const resource = ctx.originalTemplate.Resources[resourceLogicalId];
+                        const context: IntrinsicContext = {
+                            resource: resource,
+                            logicalId: resourceLogicalId,
+                            ctx: ctx,
+                            valueResolver: resolveValue,
+                        };
+                        variableValues[variable] = this.resourceSpecificIntrinsicResolver
+                            .getResourceIntrinsic(resource.Type)
+                            .getAttFunc(context, propertyName);
+                    } else {
+                        this.throwError(`Expected variable "${variable}" [${resourceLogicalId}, ${propertyName}] is not found in cache`, variable);
+                    }
+                } else if (Object.keys(ctx.originalTemplate.Resources).includes(variable)) {
+                    // This can be just reference to logicalID, that should return Ref value
+                    const resource = ctx.originalTemplate.Resources[variable];
+                    const context: IntrinsicContext = {
+                        resource: resource,
+                        logicalId: variable,
+                        ctx: ctx,
+                        valueResolver: resolveValue,
+                    };
+                    variableValues[variable] = this.resourceSpecificIntrinsicResolver.getResourceIntrinsic(resource.Type).refFunc(context);
+                } else {
+                    this.throwError(`Expected variable "${variable}" is not found in cache`, variable);
+                }
             }
         }
         log.debug('[FnSubIntrinsic.resolveStringSubValue] Variable values:', variableValues);

@@ -1,6 +1,12 @@
 import log from 'loglevel';
 import { StringUtils, StringUtilsImpl } from '../../../src/common';
 
+type TestCase = {
+    input: string;
+    output: string;
+    variables?: Record<string, string>;
+};
+
 describe('string-utils', () => {
     let stringUtils: StringUtils;
     let traceSpy: jest.SpyInstance;
@@ -250,6 +256,183 @@ describe('string-utils', () => {
         it('should split string', () => {
             const result = stringUtils.splitString('a,b,c,d', ',');
             expect(result).toStrictEqual(['a', 'b', 'c', 'd']);
+        });
+    });
+
+    describe('renderVelocityJsonString', () => {
+        const templateEventBus1 = `
+#*
+  This is a velocity comment.
+*#
+#set($requestSource = $input.json('$.topic'))
+{
+    "Entries": [
+        {
+            "DetailType": $input.json('$.topic'),
+            "Source": "$requestSource",
+            "EventBusName": "test-perf-event-bus-env",
+            "Detail": "$util.escapeJavaScript($input.json('$.payload')).replaceAll("\\'","'")"
+        }
+    ]
+}
+`;
+        const templateDynamo = `
+{
+    "TableName": "Users",
+    "Item": {
+        "UserId": {
+            "S": "$input.path('$.userId')"
+        },
+        "Name": {
+            "S": "$input.path('$.name')"
+        },
+        "Age": {
+            "N": "$input.path('$.age')"
+        },
+        "CreatedAt": {
+            "S": "$context.requestTimeEpoch"
+        }
+    },
+    #if($input.path('$.email'))
+    "ConditionExpression": "attribute_not_exists(Email)",
+    "ExpressionAttributeNames": {"#E": "Email"},
+    "ExpressionAttributeValues": {":e": {"S": "$input.path('$.email')"}},
+    "UpdateExpression": "SET #E = :e"
+    #end
+}
+        `;
+        const template3Sqs = `
+{
+    "QueueUrl": "\${stageVariables.queueUrl}",
+    "MessageBody": "$util.escapeJavaScript($input.json('$'))",
+    #set($attributes = {})
+    #foreach($key in $input.params().header.keySet())
+        #set($value = $input.params().header.get($key))
+        $util.qr($attributes.put("$key", {"DataType": "String", "StringValue": "$value"}))
+    #end
+    #if(!$attributes.isEmpty())
+    "MessageAttributes": $util.toJson($attributes)
+    #end
+}
+`;
+        const template4Sns = `
+{
+    "TopicArn": "arn:aws:sns:\${stageVariables.region}:\${stageVariables.accountId}:\${stageVariables.topicName}",
+    "Message": "$util.escapeJavaScript($input.json('$.message'))",
+    #if($input.path('$.subject'))
+    "Subject": "$input.path('$.subject')",
+    #end
+    "MessageAttributes": {
+        "RequestId": {
+            "DataType": "String",
+            "StringValue": "$context.requestId"
+        },
+        "HttpMethod": {
+            "DataType": "String",
+            "StringValue": "$context.httpMethod"
+        }
+    }
+}
+`;
+        const template5EventBridge = `
+{
+    "Entries": [
+        {
+            "Source": "$input.path('$.source')",
+            "DetailType": "$input.path('$.detailType')",
+            "Detail": "$util.escapeJavaScript($input.json('$.detail'))",
+            "EventBusName": "\${stageVariables.eventBusName}",
+            #if($input.path('$.time'))
+            "Time": "$input.path('$.time')"
+            #else
+            "Time": "$context.requestTimeEpoch"
+            #end
+        }
+    ]
+}
+`;
+        const template7StepFunction = `
+{
+    "stateMachineArn": "arn:aws:states:\${stageVariables.region}:\${stageVariables.accountId}:stateMachine:\${stageVariables.stateMachineName}",
+    "name": "$util.randomUUID()",
+    #set($input = $input.json('$'))
+    #set($input.requestId = $context.requestId)
+    #set($input.apiId = $context.apiId)
+    "input": "$util.escapeJavaScript($util.toJson($input))"
+}
+`;
+        const template8S3 = `
+{
+    "Bucket": "\${stageVariables.bucketName}",
+    "Key": "$input.path('$.fileName')",
+    "ContentType": "$input.params().header.get('Content-Type')",
+    "Body": "$util.base64Decode($input.path('$.content'))",
+    #set($metadata = {})
+    #foreach($key in $input.path('$.metadata').keySet())
+        $util.qr($metadata.put($key, $input.path("$.metadata.$key")))
+    #end
+    #if(!$metadata.isEmpty())
+    "Metadata": $util.toJson($metadata)
+    #end
+}
+`;
+        const testCases: TestCase[] = [
+            {
+                input: templateEventBus1,
+                output: `{"Entries":[{"DetailType":"$.topic","Source":"$.topic","EventBusName":"test-perf-event-bus-env","Detail":"$.payload"}]}`,
+            },
+            {
+                input: templateDynamo,
+                output: `{"TableName":"Users","Item":{"UserId":{"S":"{}"},"Name":{"S":"{}"},"Age":{"N":"{}"},"CreatedAt":{"S":"$context.requestTimeEpoch"}},"ConditionExpression":"attribute_not_exists(Email)","ExpressionAttributeNames":{"#E":"Email"},"ExpressionAttributeValues":{":e":{"S":"{}"}},"UpdateExpression":"SET #E = :e"}`,
+            },
+            {
+                input: template3Sqs,
+                output: `{"QueueUrl":"https://sqs.com","MessageBody":"$","MessageAttributes":{}}`,
+                variables: { queueUrl: 'https://sqs.com' },
+            },
+            {
+                input: template4Sns,
+                output: `{"TopicArn":"arn:aws:sns:us-west-1:1234567890123:my-topic","Message":"$.message","Subject":"{}","MessageAttributes":{"RequestId":{"DataType":"String","StringValue":"$context.requestId"},"HttpMethod":{"DataType":"String","StringValue":"$context.httpMethod"}}}`,
+                variables: {
+                    region: 'us-west-1',
+                    accountId: '1234567890123',
+                    topicName: 'my-topic',
+                },
+            },
+            {
+                input: template5EventBridge,
+                output: `{"Entries":[{"Source":"{}","DetailType":"{}","Detail":"$.detail","EventBusName":"test-event-bus-env","Time":"{}"}]}`,
+                variables: { eventBusName: 'test-event-bus-env' },
+            },
+            {
+                input: template7StepFunction,
+                output: `{"stateMachineArn":"arn:aws:states:us-west-1:1234567890123:stateMachine:test-sf","name":"$util.randomUUID()","input":"{}"}`,
+                variables: {
+                    region: 'us-west-1',
+                    accountId: '1234567890123',
+                    stateMachineName: 'test-sf',
+                },
+            },
+            {
+                input: template8S3,
+                output: `{"Bucket":"my-s3-bucket","Key":"{}","ContentType":"$input.params().header.get('Content-Type')","Body":"{}","Metadata":{}}`,
+                variables: {
+                    bucketName: 'my-s3-bucket',
+                },
+            },
+        ];
+
+        describe.each(testCases)('renderVelocityJsonString', (testCase) => {
+            const { input, output, variables } = testCase;
+
+            beforeEach(() => {
+                stringUtils = new StringUtilsImpl();
+            });
+
+            it(`should parse template into ${output}`, () => {
+                const result = stringUtils.renderVelocityJsonString(input, variables);
+                expect(result).toStrictEqual(output);
+            });
         });
     });
 });

@@ -3,7 +3,7 @@ import { IntrinsicContext } from '../../types/intrinsic-types';
 import { BaseResource } from './BaseResourceImpl';
 
 export class AwsEventsConnectionResource extends BaseResource {
-    getAttFunc(context: IntrinsicContext, key: string): unknown {
+    override getAttFunc(context: IntrinsicContext, key: string): unknown {
         const { ctx, logicalId, resource, valueResolver } = context;
         if (key === 'Arn') {
             return this.arnGenFunc(context);
@@ -34,7 +34,7 @@ export class AwsEventsConnectionResource extends BaseResource {
         return this.idGenFunc(context);
     }
 
-    arnGenFunc(context: IntrinsicContext): string {
+    override arnGenFunc(context: IntrinsicContext): string {
         const { ctx, resource } = context;
         if (!resource._arn) {
             const region = ctx.getRegion();
@@ -46,7 +46,7 @@ export class AwsEventsConnectionResource extends BaseResource {
         return resource._arn;
     }
 
-    idGenFunc(context: IntrinsicContext): string {
+    override idGenFunc(context: IntrinsicContext): string {
         const { ctx, logicalId, resource, valueResolver } = context;
         if (!resource._id) {
             const resTyped = resource as EventsConnectionResource;
