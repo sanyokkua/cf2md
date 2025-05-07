@@ -13,7 +13,7 @@ export abstract class BaseResourceMapper implements ResourceMapper {
     }
 
     mapResource(input: MapperInput<CloudFormationResource>): ResourceModel {
-        if (this.validate() && input.resource.Type.toLowerCase() !== this.getMapperResourceType().toLowerCase()) {
+        if (this.validate() && input.resource.Type !== this.getMapperResourceType()) {
             throw new Error('Mapper called for incorrect resource type');
         }
         const mappedResource = this.mapResourceSpecificProps(input);

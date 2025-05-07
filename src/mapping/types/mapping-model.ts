@@ -4,6 +4,10 @@ import { ResourceModel } from './resources-model';
 
 export type StringToResource = Map<string, CloudFormationResource>;
 export type StringToResources = Map<string, Set<CloudFormationResource>>;
+export type ResourceFilterCondition = {
+    resourceType?: string;
+    filterFunction: (res: CloudFormationResource) => boolean;
+};
 
 export interface MappingContext {
     originalTemplate: CloudFormationTemplate;
@@ -12,8 +16,8 @@ export interface MappingContext {
     mappedByResourceType: StringToResources;
     mappedStubs: StringToResource;
 
-    getResourceByPhysicalId(id: string): CloudFormationResource;
-    getResourceByLogicalId(id: string): CloudFormationResource;
+    getResourceByPhysicalId(id: string, expectedType?: string): CloudFormationResource;
+    getResourceByLogicalId(id: string, expectedType?: string): CloudFormationResource;
     getResourcesByType(typeName: string): CloudFormationResource[];
     getResources(): CloudFormationResource[];
     getResourceStub(stubId: string): CloudFormationResource;
@@ -22,6 +26,9 @@ export interface MappingContext {
     isResourceIdInLogicalIds(id: string): boolean;
     isResourceTypeExists(resourceType: string): boolean;
     isResourceStub(id: string): boolean;
+
+    findResource(filterCondition: ResourceFilterCondition): CloudFormationResource | undefined;
+    findResources(filterCondition: ResourceFilterCondition): CloudFormationResource[];
 }
 
 export type MapperInput<I extends CloudFormationResource> = {

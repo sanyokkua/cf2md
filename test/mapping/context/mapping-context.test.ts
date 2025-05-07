@@ -68,6 +68,20 @@ describe('MappingContextImpl', () => {
         });
     });
 
+    describe('Type Validation via getResourceByPhysicalId / getResourceByLogicalId', () => {
+        it('should throw error when expected type does not match actual type in getResourceByPhysicalId', () => {
+            expect(() => context.getResourceByPhysicalId('physicalId1', 'WrongType')).toThrow(
+                `Expected type is WrongType and resource has type: ${mockResource1.Type}`,
+            );
+        });
+
+        it('should throw error when expected type does not match actual type in getResourceByLogicalId', () => {
+            expect(() => context.getResourceByLogicalId('LogicalId1', 'WrongType')).toThrow(
+                `Expected type is WrongType and resource has type: ${mockResource1.Type}`,
+            );
+        });
+    });
+
     describe('getResourcesByType', () => {
         it('should return an array of resources when a valid type name is provided', () => {
             expect(context.getResourcesByType('Type1')).toEqual([mockResource1]);
@@ -105,6 +119,120 @@ describe('MappingContextImpl', () => {
             };
             const emptyContext = new MappingContextImpl(emptyTemplate, emptyMappedResources);
             expect(emptyContext.getResources()).toEqual([]);
+        });
+    });
+
+    describe('getResourceStub', () => {
+        it('should return the stub resource when a valid stub ID is provided', () => {
+            expect(context.getResourceStub('Stub')).toEqual(mockResource1);
+        });
+
+        it('should throw an error when an invalid stub ID is provided', () => {
+            expect(() => context.getResourceStub('InvalidStub')).toThrow("Resource with stub 'InvalidStub' not found");
+        });
+    });
+
+    describe('isResourceIdInPhysicalIds', () => {
+        it('should return true when the physical id exists', () => {
+            expect(context.isResourceIdInPhysicalIds('physicalId1')).toBe(true);
+        });
+
+        it('should return false when the physical id does not exist', () => {
+            expect(context.isResourceIdInPhysicalIds('NonExistentId')).toBe(false);
+        });
+    });
+
+    describe('isResourceIdInLogicalIds', () => {
+        it('should return true when the logical id exists', () => {
+            expect(context.isResourceIdInLogicalIds('LogicalId1')).toBe(true);
+        });
+
+        it('should return false when the logical id does not exist', () => {
+            expect(context.isResourceIdInLogicalIds('NonExistentLogicalId')).toBe(false);
+        });
+    });
+
+    describe('isResourceTypeExists', () => {
+        it('should return true when the resource type exists', () => {
+            expect(context.isResourceTypeExists('Type1')).toBe(true);
+        });
+
+        it('should return false when the resource type does not exist', () => {
+            expect(context.isResourceTypeExists('NonExistentType')).toBe(false);
+        });
+    });
+
+    describe('isResourceStub', () => {
+        it('should return true when the stub exists', () => {
+            expect(context.isResourceStub('Stub')).toBe(true);
+        });
+
+        it('should return false when the stub does not exist', () => {
+            expect(context.isResourceStub('NonExistentStub')).toBe(false);
+        });
+    });
+
+    describe('findResource', () => {
+        it('should return undefined when the resource type does not exist', () => {
+            const condition = {
+                resourceType: 'NonExistentType',
+                filterFunction: jest.fn(),
+            };
+            expect(context.findResource(condition)).toBeUndefined();
+        });
+
+        it('should return a resource matching the filter condition for a specific type', () => {
+            const condition = {
+                resourceType: 'Type1',
+                filterFunction: (resource: CloudFormationResource) => resource._id === 'physicalId1',
+            };
+            expect(context.findResource(condition)).toEqual(mockResource1);
+        });
+
+        it('should return a resource matching the filter condition from all resources when type is not specified', () => {
+            const condition = {
+                filterFunction: (resource: CloudFormationResource) => resource._id === 'physicalId2',
+            };
+            expect(context.findResource(condition)).toEqual(mockResource2);
+        });
+
+        it('should return undefined if no resource matches the filter condition', () => {
+            const condition = {
+                filterFunction: () => false,
+            };
+            expect(context.findResource(condition)).toBeUndefined();
+        });
+    });
+
+    describe('findResources', () => {
+        it('should return an empty array when the resource type does not exist', () => {
+            const condition = {
+                resourceType: 'NonExistentType',
+                filterFunction: jest.fn(),
+            };
+            expect(context.findResources(condition)).toEqual([]);
+        });
+
+        it('should return an array of resources matching the filter condition for a specific type', () => {
+            const condition = {
+                resourceType: 'Type1',
+                filterFunction: (resource: CloudFormationResource) => resource._id === 'physicalId1',
+            };
+            expect(context.findResources(condition)).toEqual([mockResource1]);
+        });
+
+        it('should return an array of resources matching the filter condition for all resources when type is not specified', () => {
+            const condition = {
+                filterFunction: (resource: CloudFormationResource) => Object.keys(resource.Properties).length === 0,
+            };
+            expect(context.findResources(condition)).toEqual([mockResource1, mockResource2]);
+        });
+
+        it('should return an empty array if no resource matches the filter condition', () => {
+            const condition = {
+                filterFunction: () => false,
+            };
+            expect(context.findResources(condition)).toEqual([]);
         });
     });
 });

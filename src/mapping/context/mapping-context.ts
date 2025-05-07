@@ -1,5 +1,7 @@
 import { CloudFormationResource, CloudFormationTemplate } from '../../parsing/types/cloudformation-model';
-import { MappedResources, MappingContext, StringToResource, StringToResources } from '../types/mapping-model';
+import { MappedResources, MappingContext, ResourceFilterCondition, StringToResource, StringToResources } from '../types/mapping-model';
+
+type ResourceIdType = 'physicalId' | 'logicalId';
 
 export class MappingContextImpl implements MappingContext {
     originalTemplate: CloudFormationTemplate;
@@ -16,24 +18,36 @@ export class MappingContextImpl implements MappingContext {
         this.mappedStubs = mappedResources.mappedStubs;
     }
 
-    getResourceByPhysicalId(id: string): CloudFormationResource {
-        if (this.mappedStubs.has(id)) {
-            return this.mappedStubs.get(id) as CloudFormationResource;
+    private validateType(resource: CloudFormationResource, expectedType?: string) {
+        if (expectedType && resource.Type !== expectedType) {
+            throw new Error(`Expected type is ${expectedType} and resource has type: ${resource.Type}`);
         }
-        if (!this.mappedResourcesByPhysicalId.has(id)) {
-            throw new Error("Resource with physicalId '" + id + "' not found");
-        }
-        return this.mappedResourcesByPhysicalId.get(id) as CloudFormationResource;
     }
 
-    getResourceByLogicalId(id: string): CloudFormationResource {
+    private getResourceFromMap(
+        resourceMap: StringToResource,
+        id: string,
+        resourceIdType: ResourceIdType,
+        expectedType?: string,
+    ): CloudFormationResource {
+        // Check before for stubs
         if (this.mappedStubs.has(id)) {
             return this.mappedStubs.get(id) as CloudFormationResource;
         }
-        if (!this.mappedResourcesByLogicalId.has(id)) {
-            throw new Error("Resource with logicalId '" + id + "' not found");
+        if (!resourceMap.has(id)) {
+            throw new Error(`Resource with ${resourceIdType} '${id}' not found`);
         }
-        return this.mappedResourcesByLogicalId.get(id) as CloudFormationResource;
+        const resource = resourceMap.get(id) as CloudFormationResource;
+        this.validateType(resource, expectedType);
+        return resource;
+    }
+
+    getResourceByPhysicalId(id: string, expectedType?: string): CloudFormationResource {
+        return this.getResourceFromMap(this.mappedResourcesByPhysicalId, id, 'physicalId', expectedType);
+    }
+
+    getResourceByLogicalId(id: string, expectedType?: string): CloudFormationResource {
+        return this.getResourceFromMap(this.mappedResourcesByLogicalId, id, 'logicalId', expectedType);
     }
 
     getResourcesByType(typeName: string): CloudFormationResource[] {
@@ -73,5 +87,23 @@ export class MappingContextImpl implements MappingContext {
 
     isResourceStub(id: string): boolean {
         return this.mappedStubs.has(id);
+    }
+
+    findResource(filterCondition: ResourceFilterCondition): CloudFormationResource | undefined {
+        if (filterCondition.resourceType && !this.isResourceTypeExists(filterCondition.resourceType)) {
+            return undefined;
+        }
+        const resources = filterCondition.resourceType ? this.getResourcesByType(filterCondition.resourceType) : this.getResources();
+        const foundResource = resources.find((resource) => filterCondition.filterFunction(resource));
+        return foundResource;
+    }
+
+    findResources(filterCondition: ResourceFilterCondition): CloudFormationResource[] {
+        if (filterCondition.resourceType && !this.isResourceTypeExists(filterCondition.resourceType)) {
+            return [];
+        }
+        const resources = filterCondition.resourceType ? this.getResourcesByType(filterCondition.resourceType) : this.getResources();
+        const foundResources = resources.filter((resource) => filterCondition.filterFunction(resource));
+        return foundResources;
     }
 }

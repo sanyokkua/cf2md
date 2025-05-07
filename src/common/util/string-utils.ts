@@ -111,7 +111,7 @@ export class StringUtilsImpl implements StringUtils {
             const parsedJson = JSON.parse(normalize);
             return JSON.stringify(parsedJson, null, 0);
         } catch (error: unknown) {
-            console.error('Rendered template is not valid JSON:', error);
+            log.error('Rendered template is not valid JSON:', error);
             return '';
         }
     }

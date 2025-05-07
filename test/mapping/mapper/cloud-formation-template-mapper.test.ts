@@ -46,6 +46,8 @@ describe('CloudFormationToModelMapperImpl', () => {
             isResourceIdInPhysicalIds: jest.fn(),
             isResourceTypeExists: jest.fn(),
             isResourceStub: jest.fn(),
+            findResource: jest.fn(),
+            findResources: jest.fn(),
         };
 
         mockCloudFormationModel = {} as jest.Mocked<CloudFormationModel>;

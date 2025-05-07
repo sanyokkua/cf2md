@@ -1,8 +1,8 @@
-import { StringUtils } from '../../common';
 import { CfResourcesType } from '../../parsing';
 import { ResourceMapper, ResourceMapperResolver } from '../types/mapping-model';
-import { IntegrationUriUtils, MapperUtil } from '../types/utils-model';
-import { ApiGatewayV1Mapper } from './resource/api-gateway-v1-mapper';
+import { MapperUtil } from '../types/utils-model';
+import { ApiGatewayV1Mapper } from './resource/api-gateway/api-gateway-v1-mapper';
+import { ApiGatewayV1EndpointMapper } from './resource/api-gateway/types';
 import { GenericResourceMapper } from './resource/generic-resource-mapper';
 import { LambdaMapper } from './resource/lambda-mapper';
 
@@ -12,16 +12,14 @@ export class ResourceMapperResolverImpl implements ResourceMapperResolver {
     private readonly factories: Record<string, () => ResourceMapper>;
 
     constructor(
-        private readonly stringUtils: StringUtils,
         private readonly mapperUtils: MapperUtil,
-        private readonly integrationUriUtils: IntegrationUriUtils,
+        private readonly apiGatewayV1EndpointMapper: ApiGatewayV1EndpointMapper,
     ) {
         this.stub = new GenericResourceMapper(this.mapperUtils);
         this.cache = {};
         this.factories = {};
         this.factories[CfResourcesType.AWS_Lambda_Function] = () => new LambdaMapper(this.mapperUtils);
-        this.factories[CfResourcesType.AWS_ApiGateway_RestApi] = () =>
-            new ApiGatewayV1Mapper(this.integrationUriUtils, this.stringUtils, this.mapperUtils);
+        this.factories[CfResourcesType.AWS_ApiGateway_RestApi] = () => new ApiGatewayV1Mapper(this.apiGatewayV1EndpointMapper, this.mapperUtils);
     }
 
     getResourceMapper(resourceType: string): ResourceMapper {
