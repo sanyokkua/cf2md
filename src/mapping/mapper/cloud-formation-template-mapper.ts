@@ -6,7 +6,7 @@ import {
     ParameterModel,
 } from '../types/cloudformation-model';
 import { CloudFormationToModelMapper, MappingContext, ResourceMapperResolver } from '../types/mapping-model';
-import { ResourceModel } from '../types/resources-model';
+import { ResourceModel } from '../types/types';
 import { MapperUtil } from '../types/utils-model';
 
 export class CloudFormationToModelMapperImpl implements CloudFormationToModelMapper {

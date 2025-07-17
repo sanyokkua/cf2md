@@ -6,8 +6,8 @@ import {
     ApiGatewayStageResource,
     CloudFormationResource,
 } from '../../../../parsing/types/cloudformation-model';
+import { ApiGatewayEndpoint, ApiGatewayV1RestApi } from '../../../types/api-gateway/model';
 import { MapperInput } from '../../../types/mapping-model';
-import { ApiGatewayEndpoint, ApiGatewayV1RestApi } from '../../../types/resources-model';
 import { MapperUtil } from '../../../types/utils-model';
 import { BaseResourceMapper } from '../base-mapper';
 import { ApiGatewayV1EndpointMapper, AuthFields, StageFields } from './types';

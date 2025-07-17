@@ -68,10 +68,16 @@ export class CfModelParserImpl implements ParserService {
     }
 
     resolveValuesInTemplate(parseResult: ParsingResult, userParameters: UserProvidedParam[]): CloudFormationTemplate {
-        log.trace('[CfModelParserImpl.resolveValuesInTemplate] Entering with arguments:', { parseResult, userParameters });
+        log.trace('[CfModelParserImpl.resolveValuesInTemplate] Entering with arguments:', {
+            parseResult,
+            userParameters,
+        });
         try {
             const [parsedTemplate, paramsToReview] = this.validateAndGetParsingResult(parseResult);
-            log.debug('[CfModelParserImpl.resolveValuesInTemplate] Validated parsing result:', { parsedTemplate, paramsToReview });
+            log.debug('[CfModelParserImpl.resolveValuesInTemplate] Validated parsing result:', {
+                parsedTemplate,
+                paramsToReview,
+            });
 
             const resolvedMapping = this.applyUserParameters(paramsToReview, userParameters);
             log.debug('[CfModelParserImpl.resolveValuesInTemplate] Applied user parameters. Resolved mapping:', resolvedMapping);
@@ -109,7 +115,10 @@ export class CfModelParserImpl implements ParserService {
     }
 
     private applyUserParameters(paramsToReview: TemplateParam[], userParameters: UserProvidedParam[]): Record<string, unknown> {
-        log.trace('[CfModelParserImpl.applyUserParameters] Entering with arguments:', { paramsToReview, userParameters });
+        log.trace('[CfModelParserImpl.applyUserParameters] Entering with arguments:', {
+            paramsToReview,
+            userParameters,
+        });
         const [resolvedMapping, stats] = this.parserUtils.replaceParamsWithUserDefined(paramsToReview, userParameters);
         log.trace('[CfModelParserImpl.applyUserParameters] User parameters applied. Replacement stats:', stats, 'Resolved mapping:', resolvedMapping);
         log.trace('[CfModelParserImpl.applyUserParameters] Exiting with result:', resolvedMapping);
@@ -117,14 +126,20 @@ export class CfModelParserImpl implements ParserService {
     }
 
     private createResolvingContext(parsedTemplate: CloudFormationTemplate, resolvedMapping: Record<string, unknown>): ResolvingContext {
-        log.trace('[CfModelParserImpl.createResolvingContext] Entering with arguments:', { parsedTemplate, resolvedMapping });
+        log.trace('[CfModelParserImpl.createResolvingContext] Entering with arguments:', {
+            parsedTemplate,
+            resolvedMapping,
+        });
         const context = new ResolvingContextImpl(this.parserUtils, this.resourceUtils, parsedTemplate, resolvedMapping);
         log.trace('[CfModelParserImpl.createResolvingContext] Exiting with result:', context);
         return context;
     }
 
     private assignIdentifiersToResources(finalTemplate: CloudFormationTemplate, context: ResolvingContext): void {
-        log.trace('[CfModelParserImpl.assignIdentifiersToResources] Entering with arguments:', { finalTemplate, context });
+        log.trace('[CfModelParserImpl.assignIdentifiersToResources] Entering with arguments:', {
+            finalTemplate,
+            context,
+        });
         log.debug('[CfModelParserImpl.assignIdentifiersToResources] Starting assignment of identifiers to resources.');
         for (const [logicalId, resource] of Object.entries(finalTemplate.Resources)) {
             log.debug(`[CfModelParserImpl.assignIdentifiersToResources] Processing resource with logical ID: ${logicalId}`);
@@ -134,7 +149,11 @@ export class CfModelParserImpl implements ParserService {
     }
 
     private assignResourceIdentifiers(resource: CloudFormationResource, logicalId: string, context: ResolvingContext): void {
-        log.trace('[CfModelParserImpl.assignResourceIdentifiers] Entering with arguments:', { resource, logicalId, context });
+        log.trace('[CfModelParserImpl.assignResourceIdentifiers] Entering with arguments:', {
+            resource,
+            logicalId,
+            context,
+        });
         const resolverFunction = (value: unknown, ctx: ResolvingContext) => this.resolverUtils.resolveValue(value, ctx);
         log.debug('[CfModelParserImpl.assignResourceIdentifiers] Retrieved resolver function:', resolverFunction);
         const resolver = this.cfResourceResolver.getResourceIntrinsic(resource.Type);

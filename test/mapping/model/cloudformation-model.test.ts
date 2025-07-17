@@ -1,6 +1,7 @@
 import { CloudformationModelImpl } from '../../../src/mapping/model/cloudformation-model';
 import { CloudFormationModelConfig, KeyValueStringPair, ParameterModel } from '../../../src/mapping/types/cloudformation-model';
-import { ResourceModel } from '../../../src/mapping/types/resources-model';
+
+import { ResourceModel } from '../../../src/mapping/types/types';
 
 describe('CloudformationModelImpl', () => {
     const mockResource1: ResourceModel = {

@@ -1,6 +1,6 @@
 import { StringKeyObject } from '../../common';
 
-export type ObjectOfStringTypes = { [key: string]: StringType };
+export type ObjectOfStringTypes = Record<string, StringType>;
 
 export interface CommonResource {
     _id?: string; // Created during resolving values
@@ -2342,7 +2342,7 @@ export interface Volume {
 /**
  * Represents an AWS ECS Task Definition resource.
  * This interface models the AWS CloudFormation resource type "AWS::ECS::TaskDefinition".
- * @see https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ecs-taskdefinition.html
+ * @see https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-resource-ecs-taskdefinition.html
  */
 export interface ECSTaskDefinitionResource extends CommonResource {
     Type: 'AWS::ECS::TaskDefinition';
@@ -2811,7 +2811,7 @@ export interface VpcLatticeConfiguration {
  *
  * This interface represents the complete specification for an ECS Service resource in CloudFormation.
  *
- * @see [AWS::ECS::Service](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ecs-service.html)
+ * @see [AWS::ECS::Service](https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-resource-ecs-service.html)
  */
 export interface EcsServiceResource extends CommonResource {
     Type: 'AWS::ECS::Service';

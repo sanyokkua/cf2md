@@ -1,3 +1,4 @@
+import { UserProvidedParam } from '../../parsing';
 import { CloudFormationTemplate } from '../../parsing/types/cloudformation-model';
 import { CloudFormationModel } from './cloudformation-model';
 
@@ -6,5 +7,5 @@ export interface Mapper {
 }
 
 export interface MapperProvider {
-    createMapper(): Mapper;
+    createMapper(userParams: UserProvidedParam[]): Mapper;
 }

@@ -1,4 +1,5 @@
 import { StringUtils, StringUtilsImpl } from '../../common';
+import { UserProvidedParam } from '../../parsing';
 import { ResourceMapperResolverImpl } from '../mapper/resource-mapper-resolver';
 import { ApiGatewayV1EndpointMapperImpl } from '../mapper/resource/api-gateway/api-gateway-v1-endpoint-mapper';
 import { IntegrationServiceMapperImpl } from '../mapper/resource/api-gateway/integration-service-mapper';
@@ -14,7 +15,7 @@ import { MapperUtilsImpl } from '../util/mapper-utils';
 import { CloudFormationMapperFacade } from './cloud-formation-mapper-facade';
 
 export class MapperProviderImpl implements MapperProvider {
-    createMapper(): Mapper {
+    createMapper(userParams: UserProvidedParam[]): Mapper {
         const mapperUtils: MapperUtil = new MapperUtilsImpl();
         const stringUtils: StringUtils = new StringUtilsImpl();
         const integrationUtils: IntegrationUriUtils = new IntegrationUriUtilsImpl();
@@ -26,7 +27,12 @@ export class MapperProviderImpl implements MapperProvider {
             integrationV1HandlerResolver,
             integrationServiceMapper,
         );
-        const resourceMapperResolver: ResourceMapperResolver = new ResourceMapperResolverImpl(mapperUtils, apiv1EndpointMapper);
+        const resourceMapperResolver: ResourceMapperResolver = new ResourceMapperResolverImpl(
+            mapperUtils,
+            apiv1EndpointMapper,
+            stringUtils,
+            userParams,
+        );
         const cloudFormationModelFactory: CloudFormationModelFactory = new CloudFormationModelFactoryImpl();
 
         return new CloudFormationMapperFacade(mapperUtils, stringUtils, resourceMapperResolver, cloudFormationModelFactory);

@@ -1,6 +1,6 @@
 import { MockIntegrationHandler } from '../../../../../src/mapping/mapper/resource/api-gateway/mock-integration-handler';
 import { IntegrationV1Handler } from '../../../../../src/mapping/mapper/resource/api-gateway/types';
-import { ApiGatewayEndpoint } from '../../../../../src/mapping/types/resources-model';
+import { ApiGatewayEndpoint } from '../../../../../src/mapping/types/api-gateway/model';
 import { ApiGatewayMethodResource } from '../../../../../src/parsing/types/cloudformation-model';
 
 describe('HttpIntegrationHandler', () => {

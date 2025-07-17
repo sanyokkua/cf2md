@@ -1,5 +1,5 @@
 import { ApiGatewayMethodResource } from '../../../../parsing/types/cloudformation-model';
-import { ApiGatewayEndpoint } from '../../../types/resources-model';
+import { ApiGatewayEndpoint } from '../../../types/api-gateway/model';
 import { IntegrationUriUtils, MapperUtil } from '../../../types/utils-model';
 import { IntegrationV1Handler } from './types';
 

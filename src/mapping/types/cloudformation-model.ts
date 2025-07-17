@@ -1,4 +1,4 @@
-import { ResourceModel } from './resources-model';
+import { ResourceModel } from './types';
 
 export type KeyValueStringPair = {
     key: string;

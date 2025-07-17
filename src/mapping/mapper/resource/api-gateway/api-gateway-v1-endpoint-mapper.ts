@@ -6,8 +6,8 @@ import {
     ApiGatewayResourceResource,
     CloudFormationResource,
 } from '../../../../parsing/types/cloudformation-model';
+import { ApiGatewayEndpoint } from '../../../types/api-gateway/model';
 import { MapperInput } from '../../../types/mapping-model';
-import { ApiGatewayEndpoint } from '../../../types/resources-model';
 import { MapperUtil } from '../../../types/utils-model';
 import { ApiGatewayV1EndpointMapper, IntegrationServiceMapper, IntegrationV1HandlerResolver, JsonMimeType } from './types';
 

@@ -1,6 +1,7 @@
 import { ApiGatewayMethodResource, CloudFormationResource } from '../../../../parsing/types/cloudformation-model';
 import { MapperInput } from '../../../types/mapping-model';
-import { ApiGatewayEndpoint } from '../../../types/resources-model';
+
+import { ApiGatewayEndpoint } from '../../../types/api-gateway/model';
 
 export const JsonMimeType = 'application/json';
 

@@ -2,7 +2,7 @@ import { CloudFormationResource } from '../../../parsing/types/cloudformation-mo
 
 import { StringKeyValueObject } from '../../../common';
 import { MapperInput, ResourceMapper } from '../../types/mapping-model';
-import { ResourceModel } from '../../types/resources-model';
+import { ResourceModel } from '../../types/types';
 import { MapperUtil } from '../../types/utils-model';
 
 export abstract class BaseResourceMapper implements ResourceMapper {
@@ -55,6 +55,20 @@ export abstract class BaseResourceMapper implements ResourceMapper {
 
     protected getOrDefault(input: unknown, defaultValueKey: string): string {
         return this.mapperUtils.extractStringOrDefaultFromMap(input, defaultValueKey, this.getDefaultMappings());
+    }
+
+    protected getYesNoValue(input: unknown): 'Yes' | 'No' {
+        const value = this.mapperUtils.extractStringOrDefault(input, 'No');
+        if (value.toLocaleLowerCase() === 'true') {
+            return 'Yes';
+        }
+        if (value.toLowerCase() === 'false') {
+            return 'No';
+        }
+        if (value === 'Yes' || value === 'No') {
+            return value;
+        }
+        throw new Error(`Invalid value for Yes/No property: ${value}`);
     }
 
     protected abstract mapResourceSpecificProps(mapperInput: MapperInput<CloudFormationResource>): ResourceModel;

@@ -2,8 +2,8 @@ import { StringKeyValueObject } from '../../../common';
 import { LambdaFunctionResource } from '../../../parsing/types/cloudformation-model';
 
 import { CfResourcesType } from '../../../parsing';
+import { LambdaFunctionModel } from '../../types/lambda/model';
 import { MapperInput } from '../../types/mapping-model';
-import { LambdaFunctionModel } from '../../types/resources-model';
 import { BaseResourceMapper } from './base-mapper';
 
 enum LambdaDefaults {

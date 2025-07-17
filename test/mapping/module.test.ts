@@ -1,5 +1,6 @@
 import log from 'loglevel';
-import { Mapper, MapperInstanceProvider, ParserService, ParserServiceInstanceProvider } from '../../src';
+import { Mapper, MapperInstanceProvider, ParserService, ParserServiceInstanceProvider, UserProvidedParam } from '../../src';
+import { PseudoParam } from '../../src/parsing';
 import * as aiGen1 from '../testdata/ai-gen-1.json';
 import * as dynamodbTemplate from '../testdata/dynamodb-lambda.json';
 import * as ecsServiceTemplate from '../testdata/ecs-service.json';
@@ -15,20 +16,29 @@ log.setLevel('silent');
 type TemplateCase = {
     name: string;
     template: any;
-    userParameters: Array<{ paramKey: string; paramValue: any }>;
+    userParameters: UserProvidedParam[];
 };
 
 // Define the common parameter set used by most templates
 const commonUserParameters = [
     { paramKey: 'AccountId', paramValue: '1234567890123' },
+    { paramKey: PseudoParam.AccountId, paramValue: '1234567890123' },
     { paramKey: 'NotificationARNs', paramValue: [''] },
+    { paramKey: PseudoParam.NotificationARNs, paramValue: [''] },
     { paramKey: 'NoValue', paramValue: '' },
+    { paramKey: PseudoParam.NoValue, paramValue: '' },
     { paramKey: 'Partition', paramValue: 'aws' },
+    { paramKey: PseudoParam.Partition, paramValue: 'aws' },
     { paramKey: 'Region', paramValue: 'us-west-1' },
+    { paramKey: PseudoParam.Region, paramValue: 'us-west-1' },
     { paramKey: 'StackId', paramValue: 'My-Test-StackId' },
+    { paramKey: PseudoParam.StackId, paramValue: 'My-Test-StackId' },
     { paramKey: 'StackName', paramValue: 'My-Test' },
+    { paramKey: PseudoParam.StackName, paramValue: 'My-Test' },
     { paramKey: 'URLSuffix', paramValue: 'urlsuffix' },
+    { paramKey: PseudoParam.URLSuffix, paramValue: 'urlsuffix' },
     { paramKey: 'AWS::NoValue', paramValue: 'AWS::NoValue' },
+    { paramKey: PseudoParam.NoValue, paramValue: 'AWS::NoValue' },
 ];
 
 // Define the test cases
@@ -101,15 +111,15 @@ describe('Parsing Module Integration Tests', () => {
     let parser: ParserService;
     let mapper: Mapper;
 
-    beforeEach(() => {
-        parser = ParserServiceInstanceProvider.createParserService();
-        mapper = MapperInstanceProvider.createMapper();
-    });
-
     describe.each(templateCases)('%s Template Evaluator', (templateCase) => {
         const { name, template, userParameters } = templateCase;
         // Convert the template object to a JSON string for parsing
         const templateJson = JSON.stringify(template);
+
+        beforeEach(() => {
+            parser = ParserServiceInstanceProvider.createParserService();
+            mapper = MapperInstanceProvider.createMapper(userParameters);
+        });
 
         describe('parseCloudFormationTemplate', () => {
             it(`should successfully parse the ${name} without errors`, () => {

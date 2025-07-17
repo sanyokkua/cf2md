@@ -1,7 +1,5 @@
 import log from 'loglevel';
-import { ParserService, ParsingResult } from '../../src';
-
-import { ParserServiceInstanceProvider } from '../../src';
+import { ParserService, ParserServiceInstanceProvider, ParsingResult } from '../../src';
 import * as aiGen1 from '../testdata/ai-gen-1.json';
 import * as dynamodbTemplate from '../testdata/dynamodb-lambda.json';
 import * as ecsServiceTemplate from '../testdata/ecs-service.json';

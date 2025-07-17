@@ -1,5 +1,5 @@
 import { HttpIntegrationHandler } from '../../../../../src/mapping/mapper/resource/api-gateway/http-integration-handler';
-import { ApiGatewayEndpoint } from '../../../../../src/mapping/types/resources-model';
+import { ApiGatewayEndpoint } from '../../../../../src/mapping/types/api-gateway/model';
 import { MapperUtil } from '../../../../../src/mapping/types/utils-model';
 import { ApiGatewayMethodResource } from '../../../../../src/parsing/types/cloudformation-model';
 

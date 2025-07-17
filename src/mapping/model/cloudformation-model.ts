@@ -1,5 +1,6 @@
 import { CloudFormationModel, CloudFormationModelConfig, KeyValueStringPair, ParameterModel } from '../types/cloudformation-model';
-import { ResourceModel } from '../types/resources-model';
+
+import { ResourceModel } from '../types/types';
 
 export class CloudformationModelImpl implements CloudFormationModel {
     private readonly resources: ResourceModel[];

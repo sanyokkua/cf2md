@@ -1,6 +1,7 @@
 import { CloudFormationResource, CloudFormationTemplate } from '../../parsing/types/cloudformation-model';
 import { CloudFormationModel } from './cloudformation-model';
-import { ResourceModel } from './resources-model';
+
+import { ResourceModel } from './types';
 
 export type StringToResource = Map<string, CloudFormationResource>;
 export type StringToResources = Map<string, Set<CloudFormationResource>>;

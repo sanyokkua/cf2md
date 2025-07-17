@@ -1,7 +1,7 @@
 import { CloudFormationToModelMapperImpl } from '../../../src/mapping/mapper/cloud-formation-template-mapper';
 import { CloudFormationModel, CloudFormationModelFactory } from '../../../src/mapping/types/cloudformation-model';
 import { CloudFormationToModelMapper, MappingContext, ResourceMapper, ResourceMapperResolver } from '../../../src/mapping/types/mapping-model';
-import { ResourceModel } from '../../../src/mapping/types/resources-model';
+import { ResourceModel } from '../../../src/mapping/types/types';
 import { MapperUtil } from '../../../src/mapping/types/utils-model';
 import { CloudFormationResource, CloudFormationTemplate } from '../../../src/parsing/types/cloudformation-model';
 
